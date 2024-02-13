@@ -3,6 +3,36 @@ def day2a(): Result[String, Int32] \ {IO, Throw} =
         |> Result.mapErr(_ -> "failed to read file")
         |> Result.map(sumPossibleGames)
 
+def day2b(): Result[String, Int32] \ {IO, Throw} =
+    Files.readLines("inputs/Day2.txt")
+        |> Result.mapErr(_ -> "failed to read file")
+        |> Result.map(sumPowers)
+
+def sumPowers(lines: List[String]): Int32 \ Throw =
+    List.sumWith(powerFromLine, lines)
+
+def powerFromLine(line: String): Int32 \ Throw =
+    let game = String.splitOn(substr={": "}, line);
+    let drawsText = List.last(game) |> getOrThrow;
+    let draws = parseMultipleDraws(drawsText);
+    let drawsMinimalSize = mimimalSize(draws);
+    power(drawsMinimalSize)
+
+def power(draws: Map[String, Int32]): Int32 =
+    Map.valuesOf(draws) |> List.foldRight((x, acc) -> x * acc, 1)
+
+def mimimalSize(draws: List[Map[String, Int32]]): Map[String, Int32] =
+    let colours = List#{"red", "green", "blue"};
+    def foldFunc(m, acc): Map[String, Int32] = {
+        def replace(key) = {
+            let mValue = Map.getWithDefault(key, 0, m);
+            let accValue = Map.getWithDefault(key, 0, acc);
+            (key, Int32.max(mValue, accValue))
+        };
+        List.map(replace, colours) |> List.toMap
+    };
+    List.foldRight(foldFunc, Map#{}, draws)
+
 def sumPossibleGames(lines: List[String]): Int32 \ Throw =
     List.map(possibleGameId, lines) 
         |> List.sumWith(Option.getWithDefault(0))
@@ -58,3 +88,16 @@ def day2aSample(): Bool =
         "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green"
     };
     assertEq(8, () -> sumPossibleGames(sample))
+
+@Test 
+def testMinimalSize(): Bool =
+    let draws = List#{
+        Map#{"blue" => 3, "red" => 4},
+        Map#{"red" => 1, "green" => 2},
+        Map#{"blue" => 6, "green" => 2}
+    };
+    Assert.eq(Map#{"red" => 4, "green" => 2, "blue" => 6}, mimimalSize(draws))
+
+@Test 
+def testPower(): Bool =
+    Assert.eq(48, power(Map#{"red" => 4, "green" => 2, "blue" => 6}))
