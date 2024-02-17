@@ -15,6 +15,12 @@ mod Utils {
             case None => do Throw.throw()
         }
 
+    pub def getOrQuit(x: Option[a]): a =
+        match x {
+            case Some(a) => a
+            case None => bug!("can't be none")
+        }
+
     pub def assertEq(expected: a, f: Unit -> a \ Throw): Bool with ToString[a], Eq[a] =
         try {
             Assert.eq(expected, f())
@@ -35,8 +41,15 @@ mod Utils {
             ()
         }
 
+    pub def listProduct(xs: List[Int32]): Int32 =
+        List.foldRight((x, y) -> x * y, 1, xs)
+
     pub def setStringBuilderLength(newLength: Int32, sb: StringBuilder[r]): Unit =
         import java.lang.StringBuilder.setLength(Int32): Unit \ {} as setLength;
         let StringBuilder.StringBuilder(msb) = sb;
         setLength(msb, newLength)
+
+    pub def readInputLines(day: Int32): List[String] \ {IO, Throw} =
+        Files.readLines("inputs/Day${day}.txt") 
+            |> resultOrThrow
 }
