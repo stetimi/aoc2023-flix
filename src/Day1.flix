@@ -1,6 +1,4 @@
-eff Throw {
-    pub def throw(): Void
-}
+use Utils.{getOrThrow, Throw};
 
 def run(part: Int32): Unit \ IO =
     Files.readLines("inputs/Day1.txt")
@@ -61,12 +59,6 @@ def indexOfFirstPrefixFromRight(line: String, prefixes: Vector[NamedNumber]): In
 
 def substrings(s: String): List[String] =
     if (String.isEmpty(s)) List#{} else s :: (String.sliceRight({start=1}, s) |> substrings)
-
-def getOrThrow(x: Option[a]): a \ Throw =
-    match x {
-        case Some(a) => a
-        case None => do Throw.throw()
-    }
 
 @Test
 def day1a(): Bool =
