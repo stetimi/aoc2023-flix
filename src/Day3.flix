@@ -1,3 +1,5 @@
+use Utils.{assertEq, doIf, getOrThrow, resultOrThrow, setStringBuilderLength, Throw};
+
 type alias Grid = {width = Int32, chars = Vector[Char]}
 type alias NumberPosition = {index = Int32, text = String}
 
@@ -8,7 +10,7 @@ def day3a(): Int32 \ {Throw, IO} =
         |> sumPartNumbers
 
 def toGrid(lines: List[String]): Grid =
-    let width = unsafeHead(lines) |> String.length;
+    let width = Utils.unsafeHead(lines) |> String.length;
     let linesVec = List.toVector(lines) |> Vector.map(String.toVector);
     {width = width, chars = Vector.foldRight((v, acc) -> v ++ acc, Vector#{}, linesVec)}
 
@@ -81,30 +83,6 @@ def adjacentCoords(n: Int32, width: Int32): Set[Int32] =
             n - 1       ,             n + 1,
             n + width - 1, n + width, n + width + 1}
     }
-
-def unsafeHead(xs: List[a]): a =
-    match xs {
-        case Nil => bug!("empty")
-        case x :: _ => x
-    }
-
-def resultOrThrow(r: Result[e, a]): a \ Throw =
-    match r {
-        case Ok(a) => a
-        case Err(_) => do Throw.throw()
-    }
-
-def doIf(cond: Bool, action: Unit -> Unit \ e): Unit \ e =
-    if (cond) {
-        action()
-    } else {
-        ()
-    }
-
-def setStringBuilderLength(newLength: Int32, sb: StringBuilder[r]): Unit =
-    import java.lang.StringBuilder.setLength(Int32): Unit \ {} as setLength;
-    let StringBuilder.StringBuilder(msb) = sb;
-    setLength(msb, newLength)
 
 @Test 
 def testToGrid(): Bool = 

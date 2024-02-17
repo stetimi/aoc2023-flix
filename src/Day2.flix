@@ -1,3 +1,5 @@
+use Utils.{assertEq, getOrThrow, Throw};
+
 def day2a(): Result[String, Int32] \ {IO, Throw} =
     Files.readLines("inputs/Day2.txt")
         |> Result.mapErr(_ -> "failed to read file")
@@ -61,13 +63,6 @@ def stringInt32(l: List[String]): (String, Int32) \ Throw =
     let s = List.last(l) |> getOrThrow;
     let n = List.head(l) |> getOrThrow |> Int32.parse(10) |> Result.toOption |> getOrThrow;
     (s, n)
-
-def assertEq(expected: a, f: Unit -> a \ Throw): Bool with ToString[a], Eq[a] =
-    try {
-        Assert.eq(expected, f())
-    } with Throw {
-        def throw(_k) = false
-    }
 
 @Test 
 def testParseSingleDraw(): Bool =
