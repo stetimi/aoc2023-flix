@@ -1,14 +1,10 @@
-use Utils.{assertEq, getOrThrow, Throw};
+use Utils.{assertEq, getOrThrow, readInputLines, Throw};
 
-def day2a(): Result[String, Int32] \ {IO, Throw} =
-    Files.readLines("inputs/Day2.txt")
-        |> Result.mapErr(_ -> "failed to read file")
-        |> Result.map(sumPossibleGames)
+def day2a(): Int32 \ {IO, Throw} =
+    readInputLines(2) |> sumPossibleGames
 
-def day2b(): Result[String, Int32] \ {IO, Throw} =
-    Files.readLines("inputs/Day2.txt")
-        |> Result.mapErr(_ -> "failed to read file")
-        |> Result.map(sumPowers)
+def day2b(): Int32 \ {IO, Throw} =
+    readInputLines(2) |> sumPowers
 
 def sumPowers(lines: List[String]): Int32 \ Throw =
     List.sumWith(powerFromLine, lines)
