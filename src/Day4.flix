@@ -1,16 +1,42 @@
 mod Day4 {
-    use Utils.{readInputLines, resultOrQuit, Throw};
+    use Utils.{doIf, readInputLines, resultOrQuit, Throw};
 
     type alias Card = {winningNumbers = Set[Int32], numbers = List[Int32]}
 
     pub def day4a(): Int32 \ {IO, Throw} =
-        readInputLines(4) |> score
+        readInputLines(4) |> score1
 
-    def score(cardTexts: List[String]): Int32 =
+    pub def day4b(): Int32 \ {IO, Throw} =
+        readInputLines(4) |> score2
+
+    def score1(cardTexts: List[String]): Int32 =
         List.map(toCard, cardTexts)
             |> List.map(countWinningNumbers)
             |> List.map(w -> Int32.pow(2, w - 1))
             |> List.sum
+
+    def score2(cardTexts: List[String]): Int32 =
+        let cards = cardTexts |> List.toVector |> Vector.map(toCard);
+        region r {
+            let counts = Array.repeat(r, Vector.length(cards), 1);
+            def incFrom!(start: Int32, end: Int32, amount: Int32): Unit =
+                doIf(start <= end, () -> 
+                    let value = Array.get(start, counts) + amount;
+                    Array.put(value, start, counts);
+                    incFrom!(start + 1, end, amount)
+                );
+            def play(index: Int32): Unit = {
+                doIf(index != Vector.length(cards), () -> {
+                    let top = Vector.get(index, cards);
+                    let winCount = countWinningNumbers(top);
+                    let amount = Array.get(index, counts);
+                    incFrom!(index + 1, index + winCount, amount);
+                    play(index + 1)
+                })
+            };
+            play(0);
+            Array.sum(counts)
+        }
 
     def toCard(text: String): Card =
         let split = String.splitOn({substr="|"}, text) |> List.toVector;
@@ -39,5 +65,9 @@ mod Day4 {
 
     @Test 
     def testScore(): Bool =
-        Assert.eq(13, score(testSample()))
+        Assert.eq(13, score1(testSample()))
+
+    @Test 
+    def testPlay(): Bool =
+        Assert.eq(30, score2(testSample()))
 }
