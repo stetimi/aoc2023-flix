@@ -34,6 +34,12 @@ mod Utils {
             case Err(_) => do Throw.throw()
         }
 
+    pub def resultOrQuit(r: Result[e, a]): a =
+        match r {
+            case Ok(a) => a
+            case Err(_) => bug!("none")
+        }
+
     pub def doIf(cond: Bool, action: Unit -> Unit \ e): Unit \ e =
         if (cond) {
             action()
