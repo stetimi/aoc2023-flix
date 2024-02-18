@@ -1,7 +1,7 @@
 mod Day4 {
     use Utils.{doIf, readInputLines, resultOrQuit, Throw};
 
-    type alias Card = {winningNumbers = Set[Int32], numbers = List[Int32]}
+    enum Card({winningNumbers = Set[Int32], numbers = List[Int32]})
 
     pub def day4a(): Int32 \ {IO, Throw} =
         readInputLines(4) |> score1
@@ -25,26 +25,25 @@ mod Day4 {
                     Array.put(value, start, counts);
                     incFrom!(start + 1, end, amount)
                 );
-            def play(index: Int32): Unit = {
-                doIf(index != Vector.length(cards), () -> {
+            def play(index: Int32): Unit = 
+                doIf(index != Vector.length(cards), () -> 
                     let top = Vector.get(index, cards);
                     let winCount = countWinningNumbers(top);
                     let amount = Array.get(index, counts);
                     incFrom!(index + 1, index + winCount, amount);
                     play(index + 1)
-                })
-            };
+                );
             play(0);
             Array.sum(counts)
         }
 
     def toCard(text: String): Card =
         let split = String.splitOn({substr="|"}, text) |> List.toVector;
-        {winningNumbers = Vector.get(0, split) |> toNumbers |> List.toSet, numbers = Vector.get(1, split) |> toNumbers}
+        Card.Card({winningNumbers = Vector.get(0, split) |> toNumbers |> List.toSet, numbers = Vector.get(1, split) |> toNumbers})
 
     def countWinningNumbers(card: Card): Int32 =
-        List.filter(n -> Set.memberOf(n, card.winningNumbers), card.numbers)
-            |> List.length
+        let Card.Card(c) = card;
+        List.count(n -> Set.memberOf(n, c.winningNumbers), c.numbers)
 
     def toNumbers(item: String): List[Int32] =
         item 
