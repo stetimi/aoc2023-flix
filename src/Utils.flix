@@ -5,6 +5,12 @@ mod Utils {
             case x :: _ => x
         }
 
+    pub def unsafeParseInt32(text: String): Int32 =
+        Int32.parse(10, text) |> resultOrQuit("Cannot parse '${text}' to Int32")
+
+    pub def unsafeParseInt64(text: String): Int64 =
+        Int64.parse(10, text) |> resultOrQuit("Cannot parse '${text}' to Int64")
+
     pub eff Throw {
         pub def throw(): Void
     }
@@ -34,10 +40,10 @@ mod Utils {
             case Err(_) => do Throw.throw()
         }
 
-    pub def resultOrQuit(r: Result[e, a]): a =
+    pub def resultOrQuit(msg: String, r: Result[e, a]): a =
         match r {
             case Ok(a) => a
-            case Err(_) => bug!("none")
+            case Err(_) => bug!(msg)
         }
 
     pub def doIf(cond: Bool, action: Unit -> Unit \ e): Unit \ e =
@@ -58,4 +64,28 @@ mod Utils {
     pub def readInputLines(day: Int32): List[String] \ {IO, Throw} =
         Files.readLines("inputs/Day${day}.txt") 
             |> resultOrThrow
+
+    pub def uncheckedReadInputLines(filename: String): List[String] =
+        unchecked_cast(Files.readLines("inputs/${filename}.txt") |> resultOrQuit("Cannot read filename ${filename}") as _ \ {}) 
+
+        pub def listSplit(matches: a -> Bool, xs: List[a]): List[List[a]] =
+        region r {
+            let curr = ref MutList.new(r) @ r;
+            let split = MutList.new(r) !> MutList.push!(deref curr);
+            foreach(x <- xs) {
+                if(matches(x)) {
+                    curr := MutList.new(r);
+                    MutList.push!(deref curr, split)
+                } else {
+                    MutList.push!(x, deref curr)
+                }
+            };
+            MutList.toList(split) |> List.map(MutList.toList)
+        }
+
+    @Test   
+    pub def testListSplit(): Bool = 
+        let xs = List#{1, 2, 3, 4, 5};
+        let split = listSplit(x -> x == 3 or x == 4, xs);
+        Assert.eq(List#{List#{1, 2}, List.Nil, List#{5}}, split)  
 }

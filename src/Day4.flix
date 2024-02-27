@@ -1,5 +1,5 @@
 mod Day4 {
-    use Utils.{doIf, readInputLines, resultOrQuit, Throw};
+    use Utils.{doIf, readInputLines, resultOrQuit, unsafeParseInt32, Throw};
 
     enum Card({winningNumbers = Set[Int32], numbers = List[Int32]})
 
@@ -50,7 +50,7 @@ mod Day4 {
             |> String.splitOn({substr=" "})
             |> List.map(Int32.parse(10))
             |> List.filter(Result.isOk)
-            |> List.map(resultOrQuit)
+            |> List.map(resultOrQuit("none"))
 
     def testSample(): List[String] =
         List#{
