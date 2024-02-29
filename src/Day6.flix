@@ -1,5 +1,5 @@
 mod Day6 {
-    use Utils.{loop, prod, getOrQuit, readInputLines, Throw}
+    use Utils.{loop, prod, getOrQuit, getOrThrow, readInputLines, Throw}
 
     type alias Race = {time = Int64, distance = Int64}
 
