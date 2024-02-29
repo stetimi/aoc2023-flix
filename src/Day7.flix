@@ -9,11 +9,26 @@ mod Day7 {
     pub def part1(): Int64 =
         uncheckedReadInputLines("Day7")
             |> List.map(parseLine)
-            |> rank
+            |> rank(noJokers, scoreNoJokers)
 
-    def rank(hands: List[(Hand, Int64)]): Int64 =
+    pub def part2(): Int64 =
+        uncheckedReadInputLines("Day7")
+            |> List.map(parseLine)
+            |> rank(jackIsJoker, jackScoresLow)        
+
+    def noJokers(_: Int64): Bool = false
+    def jackIsJoker(c: Int64): Bool = c == 11i64
+    def scoreNoJokers(c: Int64): Int64 = c
+    def jackScoresLow(c: Int64): Int64 = 
+        if (c == 11i64) {
+            0i64
+        } else {
+            c
+        }
+
+    def rank(isJoker: Int64 -> Bool, jokerScore: Int64 -> Int64, hands: List[(Hand, Int64)]): Int64 =
         hands
-            |> List.map(hr -> ( { handType = identifyHandType(fst(hr)), score = score(fst(hr)) }, snd(hr)) )
+            |> List.map(hr -> ( { handType = identifyHandType(fst(hr), isJoker), score = score(fst(hr), jokerScore) }, snd(hr)) )
             |> List.sortBy(hsh -> (fst(hsh).handType, fst(hsh).score))
             |> List.map(snd)
             |> List.zipWithIndex
@@ -21,8 +36,8 @@ mod Day7 {
             |> List.map(xy -> Int32.toInt64(fst(xy)) * snd(xy))
             |> listSum(0i64)
 
-    pub def score(hand: Hand): Int64 =
-        def powTimes(i: Int32) = Int64.pow(16i64, Int32.toInt64(4 - i)) * Vector.get(i, hand);
+    pub def score(hand: Hand, mapScore: Int64 -> Int64): Int64 =
+        def powTimes(i: Int32) = Int64.pow(16i64, Int32.toInt64(4 - i)) * mapScore(Vector.get(i, hand));
         powTimes(0) + powTimes(1) + powTimes(2) + powTimes(3) + powTimes(4)
         
     def compareByCardRank(h1: Hand, h2: Hand): Comparison =
@@ -31,27 +46,36 @@ mod Day7 {
             |> Option.map(x -> Int64.compare(fst(x), snd(x)) |> Comparison.fromInt32)
             |> Option.getWithDefault(Comparison.EqualTo)
 
-    def identifyHandType(h: Hand): HandType =
-        let grouped = Vector.groupBy((x, y) -> x == y, h) |> Vector.map(Vector.length) |> Vector.sort;
+    def identifyHandType(h: Hand, isJoker: Int64 -> Bool): HandType =
+        let grouped = h 
+            |> Vector.filter(c -> not isJoker(c))
+            |> Vector.groupBy((x, y) -> x == y) 
+            |> Vector.map(Vector.length) 
+            |> Vector.sort 
+            |> Vector.reverse;
         def count(i) = Vector.get(i, grouped);
-        let distinctCount = Vector.length(grouped);
-        match distinctCount {
-            case 1 => HandType.FiveOfAKind
-            case 2 => if (count(1) == 4) {
-                HandType.FourOfAKind
-            } else {
+        let jokersCount = Vector.count(isJoker, h);
+        let largestGroupSize = if (Vector.isEmpty(grouped)) {
+            0
+        } else {
+            Vector.get(0, grouped)
+        };
+        if (largestGroupSize + jokersCount == 5) {
+            HandType.FiveOfAKind
+        } else if (largestGroupSize + jokersCount == 4) {
+            HandType.FourOfAKind
+        } else if (largestGroupSize + jokersCount == 3) {
+            if (count(1) == 2) {
                 HandType.FullHouse
-            }
-            case 3 => if (count(2) == 3) {
+            } else {
                 HandType.ThreeOfAKind
-            } else {
-                HandType.TwoPair
             }
-            case _ => if (distinctCount == 4) {
-                HandType.OnePair
-            } else {
-                 HandType.HighCard
-            }
+        } else if (largestGroupSize == 2 and count(1) == 2) {
+            HandType.TwoPair
+        } else if (largestGroupSize == 2 or jokersCount != 0) {
+            HandType.OnePair
+        } else {
+            HandType.HighCard
         }
 
     def parseLine(line: String): (Hand, Int64) =
@@ -80,31 +104,67 @@ mod Day7 {
 
     @Test
     def identifiesFiveOfAKind(): Bool =
-        Assert.eq(HandType.FiveOfAKind, identifyHandType(toHand("QQQQQ")))
+        Assert.eq(HandType.FiveOfAKind, identifyHandType(toHand("QQQQQ"), noJokers))
 
     @Test
-    def identifiesFourOfAKind(): Bool =
-        Assert.eq(HandType.FourOfAKind, identifyHandType(toHand("QQAQQ")))
+    pub def identifiesFourOfAKind(): Bool =
+        Assert.eq(HandType.FourOfAKind, identifyHandType(toHand("QQAQQ"), noJokers))
 
     @Test
     def identifiesFullHouse(): Bool =
-        Assert.eq(HandType.FullHouse, identifyHandType(toHand("QQAAQ")))
+        Assert.eq(HandType.FullHouse, identifyHandType(toHand("QQAAQ"), noJokers))
 
     @Test
     def identifiesThreeOfAKind(): Bool =
-        Assert.eq(HandType.ThreeOfAKind, identifyHandType(toHand("QQA2Q")))   
+        Assert.eq(HandType.ThreeOfAKind, identifyHandType(toHand("QQA2Q"), noJokers))   
 
     @Test
     def identifiesTwoPair(): Bool =
-        Assert.eq(HandType.TwoPair, identifyHandType(toHand("QQA22")))  
+        Assert.eq(HandType.TwoPair, identifyHandType(toHand("QQA22"), noJokers))  
 
     @Test
     def identifiesOnePair(): Bool =
-        Assert.eq(HandType.OnePair, identifyHandType(toHand("QQA72")))  
+        Assert.eq(HandType.OnePair, identifyHandType(toHand("QQA72"), noJokers))  
 
     @Test
     def identifiesHighCard(): Bool =
-        Assert.eq(HandType.HighCard, identifyHandType(toHand("KQA72")))  
+        Assert.eq(HandType.HighCard, identifyHandType(toHand("KQA72"), noJokers))  
+
+    @Test
+    pub def identifiesFiveOfAKindWithAllJokers(): Bool =
+        Assert.eq(HandType.FiveOfAKind, identifyHandType(toHand("JJJJJ"), jackIsJoker))  
+
+    @Test
+    pub def identifiesFiveOfAKindWithJokers(): Bool =
+        Assert.eq(HandType.FiveOfAKind, identifyHandType(toHand("JJ88J"), jackIsJoker))  
+
+    @Test
+    pub def identifiesFourOfAKindWithJokers(): Bool =
+        Assert.eq(HandType.FourOfAKind, identifyHandType(toHand("JJ87J"), jackIsJoker)) 
+
+    @Test
+    pub def identifiesThreeOfAKindWithOneJoker(): Bool =
+        Assert.eq(HandType.ThreeOfAKind, identifyHandType(toHand("J8442"), jackIsJoker))  
+
+    @Test
+    pub def identifiesThreeOfAKindWithTwoJokers(): Bool =
+        Assert.eq(HandType.ThreeOfAKind, identifyHandType(toHand("JJ472"), jackIsJoker))  
+
+     @Test
+    pub def identifiesTwoPairWithJokersAllowed(): Bool =
+        Assert.eq(HandType.TwoPair, identifyHandType(toHand("4466A"), jackIsJoker)) 
+
+    @Test
+    pub def identifiesOnePairWithOneJoker(): Bool =
+        Assert.eq(HandType.OnePair, identifyHandType(toHand("J4567"), jackIsJoker))                     
+    
+    @Test
+    pub def identifiesOnePairWithJokersAlloed(): Bool =
+        Assert.eq(HandType.OnePair, identifyHandType(toHand("44567"), jackIsJoker))  
+    
+    @Test
+    pub def identifiesHighCardWithJokersAllowed(): Bool =
+        Assert.eq(HandType.HighCard, identifyHandType(toHand("4T68A"), jackIsJoker))                     
 
     @Test 
     def testCompareByCardRankWhenEqual(): Bool =
@@ -130,6 +190,13 @@ mod Day7 {
     pub def testPart1(): Bool =
         let ans = uncheckedReadInputLines("Day7Test") 
             |> List.map(parseLine)
-            |> rank;
+            |> rank(noJokers, scoreNoJokers);
         Assert.eq(6440i64, ans)
+
+     @Test 
+    pub def testPart2(): Bool =
+        let ans = uncheckedReadInputLines("Day7Test") 
+            |> List.map(parseLine)
+            |> rank(jackIsJoker, jackScoresLow);
+        Assert.eq(5905i64, ans)       
 }
