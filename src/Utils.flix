@@ -83,9 +83,27 @@ mod Utils {
             MutList.toList(split) |> List.map(MutList.toList)
         }
 
+    pub def loop(start: Int32, end: Int32, f: Int32 -> Bool \ e): Unit \ e =
+        if (start < end) {
+            if (f(start)) {
+                loop(start + 1, end, f)
+            } else {
+                ()
+            }
+        } else {
+            ()
+        }
+
+    pub def prod(xs: List[Int32]): Int32 =
+        List.foldRight((x, y) -> x * y, 1, xs)
+
     @Test   
     pub def testListSplit(): Bool = 
         let xs = List#{1, 2, 3, 4, 5};
         let split = listSplit(x -> x == 3 or x == 4, xs);
         Assert.eq(List#{List#{1, 2}, List.Nil, List#{5}}, split)  
+
+    @Test   
+    pub def testProd(): Bool = 
+        Assert.eq(70, List#{2, 5, 7} |> prod)
 }
