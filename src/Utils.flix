@@ -83,10 +83,10 @@ mod Utils {
             MutList.toList(split) |> List.map(MutList.toList)
         }
 
-    pub def loop(start: Int32, end: Int32, f: Int32 -> Bool \ e): Unit \ e =
+    pub def loop(start: Int64, end: Int64, f: Int64 -> Bool \ e): Unit \ e =
         if (start < end) {
             if (f(start)) {
-                loop(start + 1, end, f)
+                loop(start + 1i64, end, f)
             } else {
                 ()
             }
@@ -94,8 +94,8 @@ mod Utils {
             ()
         }
 
-    pub def prod(xs: List[Int32]): Int32 =
-        List.foldRight((x, y) -> x * y, 1, xs)
+    pub def prod(unit: a, xs: List[a]): a with Mul[a] =
+        List.foldRight((x, y) -> x * y, unit, xs)
 
     @Test   
     pub def testListSplit(): Bool = 
@@ -105,5 +105,5 @@ mod Utils {
 
     @Test   
     pub def testProd(): Bool = 
-        Assert.eq(70, List#{2, 5, 7} |> prod)
+        Assert.eq(70, prod(1, List#{2, 5, 7}))
 }

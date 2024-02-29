@@ -1,41 +1,39 @@
 mod Day6 {
-    use Utils.{loop, prod, readInputLines, Throw}
+    use Utils.{loop, prod, getOrQuit, readInputLines, Throw}
 
-    type alias Race = {time = Int32, distance = Int32}
+    type alias Race = {time = Int64, distance = Int64}
 
-    pub def part1(): Int32 \ {Throw, IO} =
+    pub def part1(): Int64 \ {Throw, IO} =
         readInputLines(6)
             |> parseInputs
             |> winCountsAllRaces
 
-    def winCountsAllRaces(races: List[Race]): Int32 =
+    pub def part2(): Int64 =
+        let race = {time = 62737565i64, distance = 644102312401023i64};
+        winCounts(race)
+
+    def winCountsAllRaces(races: List[Race]): Int64 =
         let counts = List.map(winCounts, races);
-        prod(counts)
+        prod(1i64, counts)
 
-    def winCounts(race: Race): Int32 =
-        region rc {
-            let count = ref 0 @ rc;
-            loop(0, race.distance, buttonHeld -> 
-                let d = distance(race.time, buttonHeld);
-                if (d > race.distance) {
-                    count := (deref count) + 1
-                } else {
-                    ()
-                };
-                true
-            );
-            deref count
-        }
+    pub def winCounts(race: Race): Int64 =
+        let (lowerButtonTime, upperButtonTime) = buttonTimes(race.time, race.distance);
+        upperButtonTime - lowerButtonTime - 1i64
 
-    def distance(raceTime: Int32, buttonHeld: Int32): Int32 =
-        let speed = buttonHeld;
-        (raceTime - buttonHeld) * speed
+    def buttonTimes(raceTime: Int64, distance: Int64): (Int64, Int64) =
+        let raceTimeF = Int64.toFloat64(raceTime);
+        let distanceF = Int64.toFloat64(distance);
+        def sqrt(x) = Float64.pow(x, 0.5);
+        let discriminator = sqrt(raceTimeF * raceTimeF - 4.0 * distanceF);
+        let lower = (raceTimeF - discriminator) / 2.0;
+        let upper = (raceTimeF + discriminator) / 2.0;
+        (Float64.tryToInt64(Float64.floor(lower)) |> getOrQuit, Float64.tryToInt64(Float64.ceil(upper)) |> getOrQuit)
 
     def parseInputs(lines: List[String]): List[Race] =
         let linesVec = List.toVector(lines);
-        def parseNumbers(line: String): List[Int32] =
+        def parseNumbers(line: String): List[Int64] =
             String.splitOn({substr = " "}, line)
-            |> List.map(Int32.parse(10))
+            |> List.map(Int64.parse(10))
             |> List.filterMap(Result.toOption);
         let times = parseNumbers(Vector.get(0, linesVec));
         let distances = parseNumbers(Vector.get(1, linesVec));
@@ -51,34 +49,16 @@ mod Day6 {
 
     @Test
     def parseInputsTimesAreCorrect(): Bool =
-        Assert.eq(List#{7, 15, 30}, parseInputsForTest() |> List.map(r -> r.time))
+        Assert.eq(List#{7i64, 15i64, 30i64}, parseInputsForTest() |> List.map(r -> r.time))
 
     @Test
     def parseInputsDistancesAreCorrect(): Bool =
-        Assert.eq(List#{9, 40, 200}, parseInputsForTest() |> List.map(r -> r.distance))
-
-    @Test 
-    def distance0(): Bool =
-        Assert.eq(0, distance(7, 0))
-
-    @Test 
-    def distance1(): Bool =
-        Assert.eq(6, distance(7, 1))
-
-    @Test 
-    def distance3(): Bool =
-        Assert.eq(12, distance(7, 3))
-
-    @Test 
-    def distance7(): Bool =
-        Assert.eq(0, distance(7, 7))
-
+        Assert.eq(List#{9i64, 40i64, 200i64}, parseInputsForTest() |> List.map(r -> r.distance))
     @Test 
     def winCounts1(): Bool =    
-        let race = {time = 7, distance = 9};
-        Assert.eq(4, winCounts(race))
+        Assert.eq(4i64, winCounts({time = 7i64, distance = 9i64}))
 
     @Test 
     def testPart1(): Bool =
-        Assert.eq(288, parseInputsForTest() |> winCountsAllRaces)
+        Assert.eq(288i64, parseInputsForTest() |> winCountsAllRaces)
 }
