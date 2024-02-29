@@ -68,7 +68,7 @@ mod Day3 {
                     let ch = Vector.get(index, grid.chars);
                     let isDigit = Char.isDigit(ch);
                     doIf(isDigit, () -> StringBuilder.append!(ch, numberText));
-                    let stringAtEndOfRow = Int32.rem(index + 1, grid.width) == 0 and StringBuilder.length(numberText) != 0;
+                    let stringAtEndOfRow = Int32.remainder(index + 1, grid.width) == 0 and StringBuilder.length(numberText) != 0;
                     doIf(not isDigit or stringAtEndOfRow, () -> 
                         let numberTextLength = StringBuilder.length(numberText);
                         doIf(numberTextLength != 0, () -> 
@@ -103,11 +103,11 @@ mod Day3 {
         }
 
     def adjacentCoords(n: Int32, width: Int32): Set[Int32] =
-        if (Int32.rem(n, width) == 0) {
+        if (Int32.remainder(n, width) == 0) {
             Set#{n - width, n - width + 1,
                             n + 1,
                 n + width, n + width + 1}
-        } else if (Int32.rem(n, width) == width - 1) {
+        } else if (Int32.remainder(n, width) == width - 1) {
             Set#{n - width - 1, n - width,
                 n - 1       ,             
                 n + width - 1, n + width}
