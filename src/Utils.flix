@@ -53,6 +53,13 @@ mod Utils {
             ()
         }
 
+    pub def negateComparison(c: Comparison): Comparison =
+        match c {
+            case Comparison.EqualTo => Comparison.EqualTo
+            case Comparison.LessThan => Comparison.GreaterThan
+            case Comparison.GreaterThan => Comparison.LessThan
+        }
+
     pub def listProduct(xs: List[Int32]): Int32 =
         List.foldRight((x, y) -> x * y, 1, xs)
 
@@ -96,6 +103,17 @@ mod Utils {
 
     pub def prod(unit: a, xs: List[a]): a with Mul[a] =
         List.foldRight((x, y) -> x * y, unit, xs)
+
+    pub def listSum(unit: a, xs: List[a]): a with Add[a] =
+        List.foldRight((x, y) -> x + y, unit, xs)
+
+    pub def toStringDebug(x: a): a with ToString[a] =
+        debug(ToString.toString(x));
+        x
+
+    pub def debugF(msg: a -> String, x: a): a =
+        debug(msg(x));
+        x
 
     @Test   
     pub def testListSplit(): Bool = 
