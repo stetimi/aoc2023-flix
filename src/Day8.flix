@@ -2,11 +2,11 @@ mod Day8 {
     use Utils.{getOrQuit, uncheckedReadInputLines}
     type alias Input = {instructions = List[Char], mappings = Map[String, {left = String, right = String}]}
 
-    pub def part1(): Int32 =
-        uncheckedReadInputLines("Day8")
+    pub def run(filename: String, part: Input -> Int64): Int64 =
+        uncheckedReadInputLines(filename)
             |> List.toVector
             |> parseInput
-            |> run
+            |> part
 
     def parseInput(lines: Vector[String]): Input =
         def split(s) = 
@@ -18,33 +18,46 @@ mod Day8 {
             |> Vector.toMap;
         {instructions = instructions, mappings = mappings}
 
-    def run(input: Input): Int32 =
-        followInstructions(0, "AAA", input)
+    pub def part1(input: Input): Int64 =
+        followInstructions(0i64, input, n -> n == "ZZZ", "AAA")
+    
+    pub def part2(input: Input): Int64 =
+        Map.keysOf(input.mappings)
+            |> Set.filter(String.endsWith({suffix="A"}))
+            |> Set.toList
+            |> List.map(followInstructions(0i64, input, String.endsWith({suffix="Z"})))
+            |> List.foldLeft(lcm, 1i64)
 
-    def followInstructions(count: Int32, start: String, input: Input): Int32 =
+    def lcm(a: Int64, b: Int64): Int64 =
+        a * b / gcd(a, b)
+
+    def gcd(a: Int64, b: Int64): Int64 = 
+        if (b == 0i64) a else gcd(b, Int64.remainder(a, b))
+
+    def followInstructions(count: Int64, input: Input, atDest: String -> Bool, start: String): Int64 =
         def loop(loopCount, current, instructions) = {
             match instructions {
                 case Nil => 
-                    if (current == "ZZZ") {
-                        (loopCount, current)
+                    if (atDest(current)) {
+                        loopCount
                     } else {
                         loop(loopCount, current, input.instructions)
                     }
                 case Cons(i, rest) =>
-                    let choices = Map.get(current, input.mappings) |> getOrQuit;
+                    let {left = left, right = right} = Map.get(current, input.mappings) |> getOrQuit;
                     let next = match i {
-                        case 'L' => choices.left
-                        case 'R' => choices.right
+                        case 'L' => left
+                        case 'R' => right
                         case _ => bug!("Unhandled ${i}")
                     };
-                    if (next == "ZZZ") {
-                        (loopCount + 1, "ZZZ")
+                    if (atDest(next)) {
+                        loopCount + 1i64
                     } else {
-                        loop(loopCount + 1, next, rest)                        
+                        loop(loopCount + 1i64, next, rest)                        
                     }
             }
         };
-        loop(count, start, input.instructions) |> fst
+        loop(count, start, input.instructions)
 
     def sampleInput1(): Vector[String] =
         Vector#{
@@ -85,13 +98,16 @@ mod Day8 {
     pub def testPart1Sample1(): Bool =
         let ans = sampleInput1()
             |> parseInput
-            |> run;
-        Assert.eq(6, ans)
+            |> part1;
+        Assert.eq(6i64, ans)
 
     @Test 
     pub def testPart1Sample2(): Bool =
         let ans = sampleInput2()
             |> parseInput
-            |> run;
-        Assert.eq(2, ans)
+            |> part1;
+        Assert.eq(2i64, ans)
+
+    pub def testPart2(): Bool =
+        Assert.eq(6i64, run("Day8Test", part2))
 }
