@@ -38,7 +38,7 @@ mod Day6 {
         let times = parseNumbers(Vector.get(0, linesVec));
         let distances = parseNumbers(Vector.get(1, linesVec));
         List.zip(times, distances)
-            |> List.map(td -> {time = fst(td), distance = snd(td)})
+            |> List.map(match (time, distance) -> {time = time, distance = distance})
 
     def parseInputsForTest(): List[Race] =
         let lines = List#{

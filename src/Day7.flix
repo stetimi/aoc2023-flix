@@ -28,22 +28,22 @@ mod Day7 {
 
     def rank(isJoker: Int64 -> Bool, jokerScore: Int64 -> Int64, hands: List[(Hand, Int64)]): Int64 =
         hands
-            |> List.map(hr -> ( { handType = identifyHandType(fst(hr), isJoker), score = score(fst(hr), jokerScore) }, snd(hr)) )
-            |> List.sortBy(hsh -> (fst(hsh).handType, fst(hsh).score))
+            |> List.map(match (handType, hand) -> ( { handType = identifyHandType(handType, isJoker), score = score(handType, jokerScore) }, hand) )
+            |> List.sortBy(match ({handType, score}, _) -> (handType, score))
             |> List.map(snd)
             |> List.zipWithIndex
-            |> List.map(x -> (fst(x) + 1, snd(x)))
-            |> List.map(xy -> Int32.toInt64(fst(xy)) * snd(xy))
+            |> List.map(match (i, s) -> Int32.toInt64(i + 1) * s)
             |> listSum(0i64)
 
     pub def score(hand: Hand, mapScore: Int64 -> Int64): Int64 =
-        def powTimes(i: Int32) = Int64.pow(16i64, Int32.toInt64(4 - i)) * mapScore(Vector.get(i, hand));
-        powTimes(0) + powTimes(1) + powTimes(2) + powTimes(3) + powTimes(4)
+        hand 
+            |> Vector.map(mapScore)
+            |> Vector.foldLeft((acc, s) -> acc * 16i64 + s, 0i64)
         
-    def compareByCardRank(h1: Hand, h2: Hand): Comparison =
-        Vector.zip(h1, h2)
-            |> Vector.findLeft(x -> fst(x) != snd(x))
-            |> Option.map(x -> Int64.compare(fst(x), snd(x)) |> Comparison.fromInt32)
+    def compareByCardRank(hand1: Hand, hand2: Hand): Comparison =
+        Vector.zip(hand1, hand2)
+            |> Vector.findLeft(match (h1, h2) -> h1 != h2)
+            |> Option.map(match (h1, h2) -> Int64.compare(h1, h2) |> Comparison.fromInt32)
             |> Option.getWithDefault(Comparison.EqualTo)
 
     def identifyHandType(h: Hand, isJoker: Int64 -> Bool): HandType =
@@ -82,21 +82,19 @@ mod Day7 {
         let split = line
             |> String.splitOn({substr=" "})
             |> List.toVector;
-        (toHand(Vector.get(0, split)), unsafeParseInt64(Vector.get(1, split)))
+        (Vector.get(0, split) |> toHand, Vector.get(1, split) |> unsafeParseInt64)
 
     pub def toHand(text: String): Hand =
-        def toCard(ch) = 
-            match ch {
-                case 'A' => 14
-                case 'K' => 13
-                case 'Q' => 12
-                case 'J' => 11
-                case 'T' => 10
-                case _ => Char.toString(ch) |> unsafeParseInt32
-            } |> Int32.toInt64;
         text
             |> String.toVector
-            |> Vector.map(toCard)
+            |> Vector.map(ch -> match ch {
+                case 'A' => 14i64
+                case 'K' => 13i64
+                case 'Q' => 12i64
+                case 'J' => 11i64
+                case 'T' => 10i64
+                case _ => Char.toString(ch) |> unsafeParseInt64
+            })
 
     @Test 
     def testParseLine(): Bool =
