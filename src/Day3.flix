@@ -1,17 +1,17 @@
 mod Day3 {
-    use Utils.{assertEq, doIf, getOrThrow, getOrQuit, readInputLines, resultOrThrow, setStringBuilderLength, Throw};
+    use Utils.{assertEq, doIf, getOrThrow, headOrThrow, prod, readInputLines, resultOrThrow, setStringBuilderLength, Throw};
 
     type alias Grid = {width = Int32, chars = Vector[Char]}
     type alias NumberPosition = {index = Int32, text = String}
 
     pub def day3a(): Int32 \ {Throw, IO} =
-        readInputLines(3) |> toGrid |> sumPartNumbers
+        readInputLines("Day3") |> toGrid |> sumPartNumbers
 
     pub def day3b(): Int32 \ {Throw, IO} =
-        readInputLines(3) |> toGrid |> sumGearRatios
+        readInputLines("Day3") |> toGrid |> sumGearRatios
 
-    def toGrid(lines: List[String]): Grid =
-        let width = Utils.unsafeHead(lines) |> String.length;
+    def toGrid(lines: List[String]): Grid \ Throw =
+        let width = headOrThrow(lines) |> String.length;
         let linesVec = List.toVector(lines) |> Vector.map(String.toVector);
         {width = width, chars = Vector.foldRight((v, acc) -> v ++ acc, Vector#{}, linesVec)}
 
@@ -21,10 +21,10 @@ mod Day3 {
         positionsSurroundingGear(positions, possibleNumberIndices)
             |> List.filter(gis -> List.length(gis) == 2)
             |> List.map(List.map(pn -> Int32.fromString(pn.text) |> getOrThrow))
-            |> List.map(Utils.listProduct)
+            |> List.map(prod(1))
             |> List.sum
 
-    def positionsSurroundingGear(numberPositions: List[NumberPosition], gearIndices: Map[Int32, Set[Int32]]): List[List[NumberPosition]] =
+    def positionsSurroundingGear(numberPositions: List[NumberPosition], gearIndices: Map[Int32, Set[Int32]]): List[List[NumberPosition]] \ Throw =
         region r {
             let indicesToPositions = MutMap.new(r);
             def put!(index: Int32, np: NumberPosition) = {
@@ -32,7 +32,7 @@ mod Day3 {
                 MutMap.put!(index, np :: nps, indicesToPositions)
             };
             foreach(gearIndex <- Map.keysOf(gearIndices)) {
-                let theseGearIndices = Map.get(gearIndex, gearIndices) |> getOrQuit;
+                let theseGearIndices = Map.get(gearIndex, gearIndices) |> getOrThrow;
                 foreach(numberPosition <- numberPositions) {
                     doIf(isPartNumber(theseGearIndices, numberPosition), () -> 
                         put!(gearIndex, numberPosition)
@@ -120,8 +120,8 @@ mod Day3 {
     @Test 
     def testToGrid(): Bool = 
         let lines = List#{"abc", "def"};
-        let grid = toGrid(lines);
-        Assert.eq(3, grid.width) and Assert.eq(String.toVector("abcdef"), grid.chars)
+        assertEq(3, () -> toGrid(lines).width)
+        and assertEq(String.toVector("abcdef"), () -> toGrid(lines).chars)
 
     @Test 
     def testCoordsAdjacentToSymbol(): Bool =
@@ -172,12 +172,10 @@ mod Day3 {
 
     @Test 
     def day3aTestSet(): Bool = 
-        let grid = day3Sample() |> toGrid;
-        assertEq(4361, () -> sumPartNumbers(grid))
+        assertEq(4361, () -> day3Sample() |> toGrid |> sumPartNumbers)
 
     @Test 
     def day3bTestSet(): Bool =
-        let grid = day3Sample() |> toGrid;
-        assertEq(467835, () -> sumGearRatios(grid))
+        assertEq(467835, () -> day3Sample() |> toGrid |> sumGearRatios)
 }
     

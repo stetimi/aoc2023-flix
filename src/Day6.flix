@@ -1,33 +1,33 @@
 mod Day6 {
-    use Utils.{loop, prod, getOrQuit, getOrThrow, readInputLines, Throw}
+    use Utils.{assertEq, loop, prod, getOrThrow, readInputLines, Throw}
 
     type alias Race = {time = Int64, distance = Int64}
 
     pub def part1(): Int64 \ {Throw, IO} =
-        readInputLines(6)
+        readInputLines("Day6")
             |> parseInputs
             |> winCountsAllRaces
 
-    pub def part2(): Int64 =
+    pub def part2(): Int64 \ Throw =
         let race = {time = 62737565i64, distance = 644102312401023i64};
         winCounts(race)
 
-    def winCountsAllRaces(races: List[Race]): Int64 =
+    def winCountsAllRaces(races: List[Race]): Int64 \ Throw =
         let counts = List.map(winCounts, races);
         prod(1i64, counts)
 
-    pub def winCounts(race: Race): Int64 =
+    pub def winCounts(race: Race): Int64 \ Throw  =
         let (lowerButtonTime, upperButtonTime) = buttonTimes(race.time, race.distance);
         upperButtonTime - lowerButtonTime - 1i64
 
-    def buttonTimes(raceTime: Int64, distance: Int64): (Int64, Int64) =
+    def buttonTimes(raceTime: Int64, distance: Int64): (Int64, Int64) \ Throw =
         let raceTimeF = Int64.toFloat64(raceTime);
         let distanceF = Int64.toFloat64(distance);
         def sqrt(x) = Float64.pow(x, 0.5);
         let discriminator = sqrt(raceTimeF * raceTimeF - 4.0 * distanceF);
         let lower = (raceTimeF - discriminator) / 2.0;
         let upper = (raceTimeF + discriminator) / 2.0;
-        (Float64.tryToInt64(Float64.floor(lower)) |> getOrQuit, Float64.tryToInt64(Float64.ceil(upper)) |> getOrQuit)
+        (Float64.tryToInt64(Float64.floor(lower)) |> getOrThrow, Float64.tryToInt64(Float64.ceil(upper)) |> getOrThrow)
 
     def parseInputs(lines: List[String]): List[Race] =
         let linesVec = List.toVector(lines);
@@ -56,9 +56,9 @@ mod Day6 {
         Assert.eq(List#{9i64, 40i64, 200i64}, parseInputsForTest() |> List.map(r -> r.distance))
     @Test 
     def winCounts1(): Bool =    
-        Assert.eq(4i64, winCounts({time = 7i64, distance = 9i64}))
+        assertEq(4i64, () -> winCounts({time = 7i64, distance = 9i64}))
 
     @Test 
     def testPart1(): Bool =
-        Assert.eq(288i64, parseInputsForTest() |> winCountsAllRaces)
+        assertEq(288i64, () -> parseInputsForTest() |> winCountsAllRaces)
 }

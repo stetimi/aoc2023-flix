@@ -1,9 +1,9 @@
 mod Day8 {
-    use Utils.{getOrQuit, uncheckedReadInputLines}
+    use Utils.{assertEq, getOrThrow, Throw, readInputLines}
     type alias Input = {instructions = List[Char], mappings = Map[String, {left = String, right = String}]}
 
-    pub def run(filename: String, part: Input -> Int64): Int64 =
-        uncheckedReadInputLines(filename)
+    pub def run(filename: String, part: Input -> Int64 \ Throw): Int64 \ {IO, Throw} =
+        readInputLines(filename)
             |> List.toVector
             |> parseInput
             |> part
@@ -18,10 +18,10 @@ mod Day8 {
             |> Vector.toMap;
         {instructions = instructions, mappings = mappings}
 
-    pub def part1(input: Input): Int64 =
+    pub def part1(input: Input): Int64 \ Throw =
         followInstructions(0i64, input, n -> n == "ZZZ", "AAA")
     
-    pub def part2(input: Input): Int64 =
+    pub def part2(input: Input): Int64 \ Throw =
         Map.keysOf(input.mappings)
             |> Set.filter(String.endsWith({suffix="A"}))
             |> Set.toList
@@ -34,8 +34,8 @@ mod Day8 {
     def gcd(a: Int64, b: Int64): Int64 = 
         if (b == 0i64) a else gcd(b, Int64.remainder(a, b))
 
-    def followInstructions(count: Int64, input: Input, atDest: String -> Bool, start: String): Int64 =
-        def loop(loopCount, current, instructions) = {
+    def followInstructions(count: Int64, input: Input, atDest: String -> Bool, start: String): Int64 \ Throw =
+        def loop(loopCount, current, instructions): Int64 \ Throw = {
             match instructions {
                 case Nil => 
                     if (atDest(current)) {
@@ -44,7 +44,7 @@ mod Day8 {
                         loop(loopCount, current, input.instructions)
                     }
                 case Cons(i, rest) =>
-                    let {left = left, right = right} = Map.get(current, input.mappings) |> getOrQuit;
+                    let {left = left, right = right} = Map.get(current, input.mappings) |> getOrThrow;
                     let next = match i {
                         case 'L' => left
                         case 'R' => right
@@ -96,18 +96,18 @@ mod Day8 {
 
     @Test 
     pub def testPart1Sample1(): Bool =
-        let ans = sampleInput1()
-            |> parseInput
-            |> part1;
-        Assert.eq(6i64, ans)
+        assertEq(6i64, () ->
+            sampleInput1()
+                |> parseInput
+                |> part1)
 
     @Test 
     pub def testPart1Sample2(): Bool =
-        let ans = sampleInput2()
-            |> parseInput
-            |> part1;
-        Assert.eq(2i64, ans)
+        assertEq(2i64, () -> 
+            sampleInput2()
+                |> parseInput
+                |> part1)
 
-    pub def testPart2(): Bool =
-        Assert.eq(6i64, run("Day8Test", part2))
+    pub def testPart2(): Bool \ IO =
+        assertEq(6i64, () -> run("Day8Test", part2))
 }

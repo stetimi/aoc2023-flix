@@ -2,10 +2,10 @@ mod Day2 {
     use Utils.{assertEq, getOrThrow, readInputLines, Throw};
 
     pub def day2a(): Int32 \ {IO, Throw} =
-        readInputLines(2) |> sumPossibleGames
+        readInputLines("Day2") |> sumPossibleGames
 
     pub def day2b(): Int32 \ {IO, Throw} =
-        readInputLines(2) |> sumPowers
+        readInputLines("Day2") |> sumPowers
 
     def sumPowers(lines: List[String]): Int32 \ Throw =
         List.sumWith(powerFromLine, lines)

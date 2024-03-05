@@ -1,15 +1,15 @@
 mod Utils {
-    pub def unsafeHead(xs: List[a]): a =
+    pub def headOrThrow(xs: List[a]): a \ Throw =
         match xs {
-            case Nil => bug!("empty")
+            case Nil => do Throw.throw()
             case x :: _ => x
-        }
+        }   
 
-    pub def unsafeParseInt32(text: String): Int32 =
-        Int32.parse(10, text) |> resultOrQuit("Cannot parse '${text}' to Int32")
+    pub def parseInt32OrThrow(text: String): Int32 \ Throw =
+        Int32.parse(10, text) |> resultOrThrow
 
-    pub def unsafeParseInt64(text: String): Int64 =
-        Int64.parse(10, text) |> resultOrQuit("Cannot parse '${text}' to Int64")
+    pub def parseInt64OrThrow(text: String): Int64 \ Throw =
+        Int64.parse(10, text) |> resultOrThrow
 
     pub eff Throw {
         pub def throw(): Void
@@ -21,13 +21,7 @@ mod Utils {
             case None => do Throw.throw()
         }
 
-    pub def getOrQuit(x: Option[a]): a =
-        match x {
-            case Some(a) => a
-            case None => bug!("can't be none")
-        }
-
-    pub def assertEq(expected: a, f: Unit -> a \ Throw): Bool with ToString[a], Eq[a] =
+    pub def assertEq(expected: a, f: Unit -> a \ e + Throw): Bool \ e with ToString[a], Eq[a] =
         try {
             Assert.eq(expected, f())
         } with Throw {
@@ -38,12 +32,6 @@ mod Utils {
         match r {
             case Ok(a) => a
             case Err(_) => do Throw.throw()
-        }
-
-    pub def resultOrQuit(msg: String, r: Result[e, a]): a =
-        match r {
-            case Ok(a) => a
-            case Err(_) => bug!(msg)
         }
 
     pub def doIf(cond: Bool, action: Unit -> Unit \ e): Unit \ e =
@@ -60,22 +48,16 @@ mod Utils {
             case Comparison.GreaterThan => Comparison.LessThan
         }
 
-    pub def listProduct(xs: List[Int32]): Int32 =
-        List.foldRight((x, y) -> x * y, 1, xs)
-
     pub def setStringBuilderLength(newLength: Int32, sb: StringBuilder[r]): Unit =
         import java.lang.StringBuilder.setLength(Int32): Unit \ {} as setLength;
         let StringBuilder.StringBuilder(msb) = sb;
         setLength(msb, newLength)
 
-    pub def readInputLines(day: Int32): List[String] \ {IO, Throw} =
-        Files.readLines("inputs/Day${day}.txt") 
+    pub def readInputLines(filename: String): List[String] \ {IO, Throw} =
+        Files.readLines("inputs/${filename}.txt") 
             |> resultOrThrow
 
-    pub def uncheckedReadInputLines(filename: String): List[String] =
-        unchecked_cast(Files.readLines("inputs/${filename}.txt") |> resultOrQuit("Cannot read filename ${filename}") as _ \ {}) 
-
-        pub def listSplit(matches: a -> Bool, xs: List[a]): List[List[a]] =
+    pub def listSplit(matches: a -> Bool, xs: List[a]): List[List[a]] =
         region r {
             let curr = ref MutList.new(r) @ r;
             let split = MutList.new(r) !> MutList.push!(deref curr);
@@ -90,10 +72,10 @@ mod Utils {
             MutList.toList(split) |> List.map(MutList.toList)
         }
 
-    pub def loop(start: Int64, end: Int64, f: Int64 -> Bool \ e): Unit \ e =
+    pub def loop(start: a, end: a, f: a -> Bool \ e): Unit \ e with Order[a], Inc[a] =
         if (start < end) {
             if (f(start)) {
-                loop(start + 1i64, end, f)
+                loop(Inc.inc(start), end, f)
             } else {
                 ()
             }
@@ -101,19 +83,23 @@ mod Utils {
             ()
         }
 
+    pub trait Inc[a] {
+        pub def inc(a: a): a
+    }
+
+    instance Inc[Int64] {
+        pub def inc(x: Int64): Int64 = x + 1i64
+    }
+
+    instance Inc[Int32] {
+        pub def inc(x: Int32): Int32 = x + 1
+    }
+
     pub def prod(unit: a, xs: List[a]): a with Mul[a] =
         List.foldRight((x, y) -> x * y, unit, xs)
 
     pub def listSum(unit: a, xs: List[a]): a with Add[a] =
         List.foldRight((x, y) -> x + y, unit, xs)
-
-    pub def toStringDebug(x: a): a with ToString[a] =
-        debug(ToString.toString(x));
-        x
-
-    pub def debugF(msg: a -> String, x: a): a =
-        debug(msg(x));
-        x
 
     @Test   
     pub def testListSplit(): Bool = 

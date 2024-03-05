@@ -1,21 +1,21 @@
 mod Day4 {
-    use Utils.{doIf, readInputLines, resultOrQuit, unsafeParseInt32, Throw};
+    use Utils.{assertEq, doIf, readInputLines, resultOrThrow, Throw};
 
     enum Card({winningNumbers = Set[Int32], numbers = List[Int32]})
 
     pub def day4a(): Int32 \ {IO, Throw} =
-        readInputLines(4) |> score1
+        readInputLines("Day4") |> score1
 
     pub def day4b(): Int32 \ {IO, Throw} =
-        readInputLines(4) |> score2
+        readInputLines("Day4") |> score2
 
-    def score1(cardTexts: List[String]): Int32 =
-        List.map(toCard, cardTexts)
-            |> List.map(countWinningNumbers)
+    def score1(cardTexts: List[String]): Int32 \ Throw =
+        cardTexts
+            |> List.map(toCard >> countWinningNumbers)
             |> List.map(w -> Int32.pow(2, w - 1))
             |> List.sum
 
-    def score2(cardTexts: List[String]): Int32 =
+    def score2(cardTexts: List[String]): Int32 \ Throw =
         let cards = cardTexts |> List.toVector |> Vector.map(toCard);
         region r {
             let counts = Array.repeat(r, Vector.length(cards), 1);
@@ -37,20 +37,21 @@ mod Day4 {
             Array.sum(counts)
         }
 
-    def toCard(text: String): Card =
-        let split = String.splitOn({substr="|"}, text) |> List.toVector;
-        Card.Card({winningNumbers = Vector.get(0, split) |> toNumbers |> List.toSet, numbers = Vector.get(1, split) |> toNumbers})
+    def toCard(text: String): Card \ Throw =
+        let split = String.splitOn({substr="|"}, text) |> List.map(toNumbers) |> List.toVector;
+        def get(i) = Vector.get(i, split);
+        Card.Card({winningNumbers = get(0) |> List.toSet, numbers = get(1)})
 
     def countWinningNumbers(card: Card): Int32 =
         let Card.Card(c) = card;
         List.count(n -> Set.memberOf(n, c.winningNumbers), c.numbers)
 
-    def toNumbers(item: String): List[Int32] =
+    def toNumbers(item: String): List[Int32] \ Throw  =
         item 
             |> String.splitOn({substr=" "})
             |> List.map(Int32.parse(10))
             |> List.filter(Result.isOk)
-            |> List.map(resultOrQuit("none"))
+            |> List.map(resultOrThrow)
 
     def testSample(): List[String] =
         List#{
@@ -64,9 +65,9 @@ mod Day4 {
 
     @Test 
     def testScore(): Bool =
-        Assert.eq(13, score1(testSample()))
+        assertEq(13, () -> score1(testSample()))
 
     @Test 
     def testPlay(): Bool =
-        Assert.eq(30, score2(testSample()))
+        assertEq(30, () -> score2(testSample()))
 }
