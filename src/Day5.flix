@@ -1,5 +1,5 @@
 mod Day5 {
-    use Utils.{getOrQuit, listSplit, readInputLines, resultOrQuit, uncheckedReadInputLines, unsafeHead, unsafeParseInt64, Throw};
+    use Utils.{assertEq, getOrThrow, headOrThrow, listSplit, readInputLines, resultOrThrow, parseInt64OrThrow, Throw};
 
     type alias ResourceMapping = {dest = Int64, src = Int64, len = Int64}
     type alias ResourceMappings = List[ResourceMapping]
@@ -10,49 +10,44 @@ mod Day5 {
             |> Option.getWithDefault(n)
 
     def chainResourceMappings(ms: List[ResourceMappings], n: Int64): Int64 =
-        def go(ms2: List[ResourceMappings], n2) = {
-            if (List.isEmpty(ms2)) {
-                n2
-            } else {
-                unsafeHead(ms2)
-                    |> matchingResouceMapping(n2)
-                    |> go(List.drop(1, ms2))
-            }
-        };
+        def go(ms2, n2) = 
+            match ms2 {
+                case Nil => n2
+                case h :: rest => matchingResouceMapping(n2, h) |> go(rest)
+            };
         go(ms, n)
         
     pub def part1(): Int64 \ {IO, Throw} =
-        readInputLines(5)
+        readInputLines("Day5")
             |> lowestLocationNumber
 
-    def lowestLocationNumber(lines: List[String]): Int64 =
-        let seeds = unsafeHead(lines)
+    def lowestLocationNumber(lines: List[String]): Int64 \ Throw =
+        let seeds = headOrThrow(lines)
             |> String.splitOn({substr=" "})
             |> List.drop(1)
-            |> List.map(unsafeParseInt64);
+            |> List.map(parseInt64OrThrow);
         let maps = List.drop(2, lines)
             |> listSplit(s -> String.trim(s) |> String.isEmpty)
             |> List.map(parseResourceMappings);
         List.map(chainResourceMappings(maps), seeds)
             |> List.minimum
-            |> getOrQuit
+            |> getOrThrow
 
-    pub def parseResourceMappings(lines: List[String]): ResourceMappings = 
+    pub def parseResourceMappings(lines: List[String]): ResourceMappings \ Throw = 
         List.drop(1, lines)
             |> List.map(parseResourceMapping)
 
-    def parseResourceMapping(line: String): ResourceMapping = 
+    def parseResourceMapping(line: String): ResourceMapping \ Throw = 
         let split = line
             |> String.splitOn({substr=" "})
             |> List.toVector;
-        def get(i) = Vector.get(i, split) |> Int64.parse(10) |> resultOrQuit("Cannot parse '${line}, index ${i}'");
+        def get(i) = Vector.get(i, split) |> Int64.parse(10) |> resultOrThrow;
         {dest = get(0), src = get(1), len = get(2)}
         
 
     @Test 
-    def testPart1(): Bool =
-        let lines = uncheckedReadInputLines("Day5Test");
-        Assert.eq(35i64, lowestLocationNumber(lines))
+    def testPart1(): Bool \ IO =
+        assertEq(35i64, () -> readInputLines("Day5Test") |> lowestLocationNumber)
 
     def sampleResourceMappings(): ResourceMappings =
         List#{

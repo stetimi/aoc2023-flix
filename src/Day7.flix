@@ -1,18 +1,18 @@
 mod Day7 {
-    use Utils.{debugF, listSum, uncheckedReadInputLines, unsafeParseInt32, unsafeParseInt64, toStringDebug, negateComparison, debugF}
+    use Utils.{assertEq, listSum, readInputLines, Throw, parseInt64OrThrow, negateComparison}
 
     type alias Hand = Vector[Int64]
     enum HandType with Eq, Order, ToString {
         case HighCard, OnePair, TwoPair, ThreeOfAKind, FullHouse, FourOfAKind, FiveOfAKind
     }
 
-    pub def part1(): Int64 =
-        uncheckedReadInputLines("Day7")
+    pub def part1(): Int64 \ {IO, Throw} =
+        readInputLines("Day7")
             |> List.map(parseLine)
             |> rank(noJokers, scoreNoJokers)
 
-    pub def part2(): Int64 =
-        uncheckedReadInputLines("Day7")
+    pub def part2(): Int64 \ {IO, Throw} =
+        readInputLines("Day7")
             |> List.map(parseLine)
             |> rank(jackIsJoker, jackScoresLow)        
 
@@ -78,13 +78,13 @@ mod Day7 {
             HandType.HighCard
         }
 
-    def parseLine(line: String): (Hand, Int64) =
+    def parseLine(line: String): (Hand, Int64) \ Throw =
         let split = line
             |> String.splitOn({substr=" "})
             |> List.toVector;
-        (Vector.get(0, split) |> toHand, Vector.get(1, split) |> unsafeParseInt64)
+        (Vector.get(0, split) |> toHand, Vector.get(1, split) |> parseInt64OrThrow)
 
-    pub def toHand(text: String): Hand =
+    pub def toHand(text: String): Hand \ Throw  =
         text
             |> String.toVector
             |> Vector.map(ch -> match ch {
@@ -93,76 +93,76 @@ mod Day7 {
                 case 'Q' => 12i64
                 case 'J' => 11i64
                 case 'T' => 10i64
-                case _ => Char.toString(ch) |> unsafeParseInt64
+                case _ => Char.toString(ch) |> parseInt64OrThrow
             })
 
     @Test 
     def testParseLine(): Bool =
-        Assert.eq((Vector#{3i64, 2i64, 10i64, 3i64, 13i64}, 765i64), parseLine("32T3K 765"))
+        assertEq((Vector#{3i64, 2i64, 10i64, 3i64, 13i64}, 765i64), () -> parseLine("32T3K 765"))
 
     @Test
     def identifiesFiveOfAKind(): Bool =
-        Assert.eq(HandType.FiveOfAKind, identifyHandType(toHand("QQQQQ"), noJokers))
+        assertEq(HandType.FiveOfAKind, () -> identifyHandType(toHand("QQQQQ"), noJokers))
 
     @Test
     pub def identifiesFourOfAKind(): Bool =
-        Assert.eq(HandType.FourOfAKind, identifyHandType(toHand("QQAQQ"), noJokers))
+        assertEq(HandType.FourOfAKind, () -> identifyHandType(toHand("QQAQQ"), noJokers))
 
     @Test
     def identifiesFullHouse(): Bool =
-        Assert.eq(HandType.FullHouse, identifyHandType(toHand("QQAAQ"), noJokers))
+        assertEq(HandType.FullHouse, () -> identifyHandType(toHand("QQAAQ"), noJokers))
 
     @Test
     def identifiesThreeOfAKind(): Bool =
-        Assert.eq(HandType.ThreeOfAKind, identifyHandType(toHand("QQA2Q"), noJokers))   
+        assertEq(HandType.ThreeOfAKind, () -> identifyHandType(toHand("QQA2Q"), noJokers))   
 
     @Test
     def identifiesTwoPair(): Bool =
-        Assert.eq(HandType.TwoPair, identifyHandType(toHand("QQA22"), noJokers))  
+        assertEq(HandType.TwoPair, () -> identifyHandType(toHand("QQA22"), noJokers))  
 
     @Test
     def identifiesOnePair(): Bool =
-        Assert.eq(HandType.OnePair, identifyHandType(toHand("QQA72"), noJokers))  
+        assertEq(HandType.OnePair, () -> identifyHandType(toHand("QQA72"), noJokers))  
 
     @Test
     def identifiesHighCard(): Bool =
-        Assert.eq(HandType.HighCard, identifyHandType(toHand("KQA72"), noJokers))  
+        assertEq(HandType.HighCard, () -> identifyHandType(toHand("KQA72"), noJokers))  
 
     @Test
     pub def identifiesFiveOfAKindWithAllJokers(): Bool =
-        Assert.eq(HandType.FiveOfAKind, identifyHandType(toHand("JJJJJ"), jackIsJoker))  
+        assertEq(HandType.FiveOfAKind, () -> identifyHandType(toHand("JJJJJ"), jackIsJoker))  
 
     @Test
     pub def identifiesFiveOfAKindWithJokers(): Bool =
-        Assert.eq(HandType.FiveOfAKind, identifyHandType(toHand("JJ88J"), jackIsJoker))  
+        assertEq(HandType.FiveOfAKind, () -> identifyHandType(toHand("JJ88J"), jackIsJoker))  
 
     @Test
     pub def identifiesFourOfAKindWithJokers(): Bool =
-        Assert.eq(HandType.FourOfAKind, identifyHandType(toHand("JJ87J"), jackIsJoker)) 
+        assertEq(HandType.FourOfAKind, () -> identifyHandType(toHand("JJ87J"), jackIsJoker)) 
 
     @Test
     pub def identifiesThreeOfAKindWithOneJoker(): Bool =
-        Assert.eq(HandType.ThreeOfAKind, identifyHandType(toHand("J8442"), jackIsJoker))  
+        assertEq(HandType.ThreeOfAKind, () -> identifyHandType(toHand("J8442"), jackIsJoker))  
 
     @Test
     pub def identifiesThreeOfAKindWithTwoJokers(): Bool =
-        Assert.eq(HandType.ThreeOfAKind, identifyHandType(toHand("JJ472"), jackIsJoker))  
+        assertEq(HandType.ThreeOfAKind, () -> identifyHandType(toHand("JJ472"), jackIsJoker))  
 
      @Test
     pub def identifiesTwoPairWithJokersAllowed(): Bool =
-        Assert.eq(HandType.TwoPair, identifyHandType(toHand("4466A"), jackIsJoker)) 
+        assertEq(HandType.TwoPair, () -> identifyHandType(toHand("4466A"), jackIsJoker)) 
 
     @Test
     pub def identifiesOnePairWithOneJoker(): Bool =
-        Assert.eq(HandType.OnePair, identifyHandType(toHand("J4567"), jackIsJoker))                     
+        assertEq(HandType.OnePair, () -> identifyHandType(toHand("J4567"), jackIsJoker))                     
     
     @Test
     pub def identifiesOnePairWithJokersAlloed(): Bool =
-        Assert.eq(HandType.OnePair, identifyHandType(toHand("44567"), jackIsJoker))  
+        assertEq(HandType.OnePair, () -> identifyHandType(toHand("44567"), jackIsJoker))  
     
     @Test
     pub def identifiesHighCardWithJokersAllowed(): Bool =
-        Assert.eq(HandType.HighCard, identifyHandType(toHand("4T68A"), jackIsJoker))                     
+        assertEq(HandType.HighCard, () -> identifyHandType(toHand("4T68A"), jackIsJoker))                     
 
     @Test 
     def testCompareByCardRankWhenEqual(): Bool =
@@ -181,20 +181,20 @@ mod Day7 {
         assertCompareByCardRank(Comparison.LessThan, "KTJJT", "KK677") 
 
     def assertCompareByCardRank(expected: Comparison, h1: String, h2: String): Bool =
-        Assert.eq(expected, compareByCardRank(toHand(h1), toHand(h2))) 
-        and Assert.eq(negateComparison(expected), compareByCardRank(toHand(h2), toHand(h1)))
+        assertEq(expected, () -> compareByCardRank(toHand(h1), toHand(h2))) 
+        and assertEq(negateComparison(expected), () -> compareByCardRank(toHand(h2), toHand(h1)))
 
     @Test 
-    pub def testPart1(): Bool =
-        let ans = uncheckedReadInputLines("Day7Test") 
-            |> List.map(parseLine)
-            |> rank(noJokers, scoreNoJokers);
-        Assert.eq(6440i64, ans)
+    pub def testPart1(): Bool \ IO =
+        assertEq(6440i64, 
+            () -> readInputLines("Day7Test") 
+                |> List.map(parseLine)
+                |> rank(noJokers, scoreNoJokers))
 
      @Test 
-    pub def testPart2(): Bool =
-        let ans = uncheckedReadInputLines("Day7Test") 
-            |> List.map(parseLine)
-            |> rank(jackIsJoker, jackScoresLow);
-        Assert.eq(5905i64, ans)       
+    pub def testPart2(): Bool \ IO =
+        assertEq(5905i64, 
+            () -> readInputLines("Day7Test") 
+                |> List.map(parseLine)
+                |> rank(jackIsJoker, jackScoresLow))       
 }
