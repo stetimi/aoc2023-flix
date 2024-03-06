@@ -5,6 +5,8 @@ mod Day9 {
 
     pub def part1(): Int32 \ {IO, Throw} = run("Day9", sumAllExtrapolated)
     
+    pub def part2(): Int32 \ {IO, Throw} = run("Day9", sumAllBackwardsExtrapolated)
+
     pub def run(file: String, part: List[Line] -> Int32 \ Throw): Int32 \ {IO, Throw} =
         readInputLines(file)
             |> parseInput
@@ -17,15 +19,26 @@ mod Day9 {
 
     def sumAllExtrapolated(lines: List[Line]): Int32 \ Throw =
         lines
-            |> List.map(nextLines >> extrapolated >> headOrThrow)
+            |> List.map(nextLines >> extrapolated(sumForwards) >> headOrThrow)
             |> List.sum
 
-    def extrapolated(lines: List[Line]): List[Int32] \ Throw =
-        def loop(thisLines: List[Line], last, all): List[Int32] \ Throw = {
+    def sumAllBackwardsExtrapolated(lines: List[Line]): Int32 \ Throw =
+        lines
+            |> List.map(nextLines >>  extrapolated(sumBackwards) >> headOrThrow)
+            |> List.sum
+
+    def sumForwards(last: Int32, line: Line): Int32 \ Throw = 
+        last + Vector.last(line) |> getOrThrow
+
+    def sumBackwards(last: Int32, line: Line): Int32 = 
+        Vector.get(0, line) - last
+
+    pub def extrapolated(calcNext: (Int32, Line) -> Int32 \ e, lines: List[Line]): List[Int32] \ e =
+        def loop(thisLines: List[Line], last, all): List[Int32] \ e = {
             match thisLines {
                 case Nil => all
                 case Cons(line, rest) =>
-                    let nextLast = last + Vector.last(line) |> getOrThrow;
+                    let nextLast = calcNext(last, line);
                     let next = Cons(nextLast, all);  
                     loop(rest, nextLast, next)
             }
@@ -51,6 +64,10 @@ mod Day9 {
         assertEq(114, () -> run("Day9Test", sumAllExtrapolated))
 
     @Test 
+    pub def testPart2(): Bool \ IO =
+        assertEq(2, () -> run("Day9Test", sumAllBackwardsExtrapolated))
+
+    @Test 
     pub def testNextLines(): Bool =
         let line = Vector#{1, 3, 6, 10, 15, 21};
         let expected = List#{
@@ -69,5 +86,5 @@ mod Day9 {
             Vector#{2, 3, 4, 5, 6},
             Vector#{1, 3, 6, 10, 15, 21}
         };
-        assertEq(List#{28, 7, 1, 0}, () -> extrapolated(diffed))
+        assertEq(List#{28, 7, 1, 0}, () -> extrapolated(sumForwards, diffed))
 }
