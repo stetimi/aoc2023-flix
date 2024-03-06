@@ -3,10 +3,12 @@ mod Day9 {
 
     type alias Line = Vector[Int32]
 
-    pub def part1(file: String): Int32 \ {IO, Throw} =
+    pub def part1(): Int32 \ {IO, Throw} = run("Day9", sumAllExtrapolated)
+    
+    pub def run(file: String, part: List[Line] -> Int32 \ Throw): Int32 \ {IO, Throw} =
         readInputLines(file)
             |> parseInput
-            |> sumAllExtrapolated
+            |> part  
 
     def parseInput(lines: List[String]): List[Line] \ Throw =
         List.map(String.splitOn({substr=" "}) 
@@ -46,7 +48,7 @@ mod Day9 {
 
     @Test 
     pub def testPart1(): Bool \ IO =
-        assertEq(114, () -> part1("Day9Test"))
+        assertEq(114, () -> run("Day9Test", sumAllExtrapolated))
 
     @Test 
     pub def testNextLines(): Bool =
