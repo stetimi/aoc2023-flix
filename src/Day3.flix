@@ -26,7 +26,7 @@ mod Day3 {
 
     def positionsSurroundingGear(numberPositions: List[NumberPosition], gearIndices: Map[Int32, Set[Int32]]): List[List[NumberPosition]] \ Throw =
         region r {
-            let indicesToPositions = MutMap.new(r);
+            let indicesToPositions = MutMap.empty(r);
             def put!(index: Int32, np: NumberPosition) = {
                 let nps = MutMap.get(index, indicesToPositions) |> Option.getWithDefault(List#{});
                 MutMap.put!(index, np :: nps, indicesToPositions)
@@ -59,9 +59,9 @@ mod Day3 {
 
     def numberPositions(grid: Grid): List[NumberPosition] =
         region r {
-            let numberPositions = MutList.new(r);
+            let numberPositions = MutList.empty(r);
             let indexRef = ref 0 @ r;
-            let numberText = StringBuilder.new(r);
+            let numberText = StringBuilder.empty(r);
             def run() = {
                 let index = deref indexRef;
                 doIf(index < Vector.length(grid.chars), () -> 
@@ -87,7 +87,7 @@ mod Day3 {
 
     def coordsAdjacentToSymbol(isSymbol: Char -> Bool, grid: Grid): Map[Int32, Set[Int32]] =
         region r {
-            let coords = MutMap.new(r);
+            let coords = MutMap.empty(r);
             def addAll!(k, v: Set[Int32]): Unit = {
                 let vs = MutMap.getWithDefault(k, Set#{}, coords);
                 let nextVs = Set.union(v, vs);
