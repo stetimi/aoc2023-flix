@@ -59,11 +59,11 @@ mod Utils {
 
     pub def listSplit(matches: a -> Bool, xs: List[a]): List[List[a]] =
         region r {
-            let curr = ref MutList.new(r) @ r;
-            let split = MutList.new(r) !> MutList.push!(deref curr);
+            let curr = ref MutList.empty(r) @ r;
+            let split = MutList.empty(r) !> MutList.push!(deref curr);
             foreach(x <- xs) {
                 if(matches(x)) {
-                    curr := MutList.new(r);
+                    curr := MutList.empty(r);
                     MutList.push!(deref curr, split)
                 } else {
                     MutList.push!(x, deref curr)

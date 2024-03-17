@@ -20,7 +20,7 @@ mod Day10 {
     def findStepsToFarthestPoint(grid: Grid[Char]): Int32 \ Throw = region rc {
         let start = findInGrid(grid, 'S') |> getOrThrow;
         let directions = Vector#{ Direction.N, Direction.E, Direction.S, Direction.W };
-        let visited = MutSet.new(rc);
+        let visited = MutSet.empty(rc);
         def alreadyVisited(p: Pos) = 
             MutSet.exists(q -> q == p, visited);
         def loop(pos_s, steps) = {
