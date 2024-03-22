@@ -96,6 +96,18 @@ mod Utils {
     pub def listSum(unit: a, xs: List[a]): a with Add[a] =
         List.foldRight((x, y) -> x + y, unit, xs)
 
+    pub def comparisonOnOrdered(x: a, y: a): Comparison with Order[a] =
+        if (x < y) {
+            Comparison.LessThan
+        } else if (x > y) {
+            Comparison.GreaterThan
+        } else {
+            Comparison.EqualTo
+        }
+
+    pub def comparing(mkKey: a -> k, first: a, second: a): Comparison with Order[k] =
+        comparisonOnOrdered(mkKey(first), mkKey(second))
+
     @Test   
     pub def testListSplit(): Bool = 
         let xs = List#{1, 2, 3, 4, 5};
