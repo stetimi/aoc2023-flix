@@ -1,5 +1,5 @@
 mod Day3 {
-    use Utils.{assertEq, doIf, getOrThrow, headOrThrow, prod, readInputLines, resultOrThrow, setStringBuilderLength, Throw};
+    use Utils.{assertEq, doIf, getOrThrow, headOrThrow, prod, readInputLines, resultOrThrow, Throw};
 
     type alias Grid = {width = Int32, chars = Vector[Char]}
     type alias NumberPosition = {index = Int32, text = String}
@@ -57,8 +57,7 @@ mod Day3 {
         };
         go(0)
 
-    def numberPositions(grid: Grid): List[NumberPosition] =
-        region r {
+    def numberPositions(grid: Grid): List[NumberPosition] = region r {
             let numberPositions = MutList.empty(r);
             let indexRef = ref 0 @ r;
             let numberText = StringBuilder.empty(r);
@@ -74,7 +73,7 @@ mod Day3 {
                         doIf(numberTextLength != 0, () -> 
                             let np = {index = index - numberTextLength, text = StringBuilder.toString(numberText)};
                             MutList.push!(np, numberPositions);
-                            setStringBuilderLength(0, numberText)
+                            StringBuilder.setLength!(0, numberText)
                         )
                     );
                     indexRef := index + 1;
