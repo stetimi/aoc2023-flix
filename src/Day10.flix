@@ -1,13 +1,16 @@
 mod Day10 {
-    use Utils.{assertEq, getOrThrow, headOrThrow, parseInt32OrThrow, readInputLines, Throw}
+    use Utils.{assertEq, comparing, getOrThrow, headOrThrow, parseInt32OrThrow, readInputLines, Throw}
     use Grid.{Grid, Pos, findInGrid}
 
-    enum Direction with Eq, Order, ToString {case N, E, S, W} 
+    enum Direction with Eq, Order, ToString {case N, E, S, W}
 
     pub def part1(): Int32 \ {IO, Throw} = 
-        run(readInputLines("Day10") |> List.toVector, findStepsToFarthestPoint)
+        run(readInputLines("Day10") |> List.toVector, countStepsToFarthestPoint)
     
-    pub def run(lines: Vector[String], part: Grid[Char] -> Int32 \ Throw): Int32 \ Throw =
+    pub def part2(): Int32 \ {IO, Throw} = 
+        run(readInputLines("Day10") |> List.toVector, countTilesWithinGrid)
+
+    pub def run(lines: Vector[String], part: Grid[Char] -> Int32 \ e): Int32 \ e =
         let points = lines
             |> Vector.map(String.toVector)
             |> Vector.flatten;
@@ -15,7 +18,11 @@ mod Day10 {
         let grid = Grid.Grid({points = points, width = width});
         part(grid)
 
-    def findStepsToFarthestPoint(grid: Grid[Char]): Int32 \ Throw = {
+    def countStepsToFarthestPoint(grid: Grid[Char]): Int32 \ Throw = 
+        let count = grid |> findStepsToFarthestPoint |> List.length;
+        count / 2
+    
+    def findStepsToFarthestPoint(grid: Grid[Char]): List[Pos] \ Throw = {
         let start = findInGrid(grid, 'S') |> getOrThrow;
         def next(pos, d) = {
             let ch = Grid.at(grid, pos);
@@ -24,27 +31,47 @@ mod Day10 {
                 p1 <- move(grid, pos, d1)
             ) yield (p1, d1)
         };
-        def loop(len, pos, d) = {
-            if (len > 0 and pos == start) {
-                len
+        def loop(steps, pos, d) = {
+            if (List.nonEmpty(steps) and pos == start) {
+                steps
             } else {
               let opd = next(pos, d);
               match opd {
-                  case None => len
+                  case None => steps
                   case Some(pd) => {
                     let (p1, d1) = pd;
-                    loop(len + 1, p1, d1)
+                    loop(p1 :: steps, p1, d1)
                   }
               }
             }
         };
         Vector#{Direction.S, Direction.N, Direction.W, Direction.E} 
-            |> Vector.map(loop(0, start))
-            |> Vector.maximum
-            |> Option.map(l -> l / 2)
+            |> Vector.map(loop(Nil, start))
+            |> Vector.maximumBy(comparing(List.length))
             |> getOrThrow
     }
 
+    ///
+    /// Uses Shoelace theorem and Pick's Theorem
+    ///
+    def countTilesWithinGrid(grid: Grid[Char]): Int32 \ Throw = {
+        let boundary = findStepsToFarthestPoint(grid) |> List.toVector;
+        let n = Vector.length(boundary);
+        // Shoelace formula, calculating the area within the boundary.
+        def loop(area, i) =
+            if (i == n) {
+                area
+            } else {
+                let j = Int32.remainder(i + 1, n);
+                let (ix, iy) = Vector.get(i, boundary);
+                let (jx, jy) = Vector.get(j, boundary);
+                loop(area + (ix * jy) - (jx * iy), i + 1)
+            };
+        let area = loop(0, 0);
+        // Pick's theorem, to count the number of points within the polygon.
+        Int32.abs(area) / 2 - n / 2 + 1
+    }
+        
     pub def nextDirection(ch: Char, d: Direction): Option[Direction] = 
         match (d, ch) {
             case (Direction.N, '|') => Some(d)
@@ -82,5 +109,38 @@ mod Day10 {
             "-L-J|",
             "L|-JF"
         };
-        assertEq(4, () -> run(simple, findStepsToFarthestPoint))
+        assertEq(4, () -> run(simple, countStepsToFarthestPoint))
+
+    @Test
+    pub def part2Simple(): Bool =
+        let grid = Vector#{
+        //   01234567890
+            "...........", // 0
+            ".S-------7.", // 1
+            ".|F-----7|.", // 2
+            ".||.....||.", // 3
+            ".||.....||.", // 4
+            ".|L-7.F-J|.", // 5
+            ".|..|.|..|.", // 6
+            ".L--J.L--J.", // 7
+            "..........."
+        };
+        assertEq(4, () -> run(grid, countTilesWithinGrid))
+
+    @Test
+    pub def part2LargerExample(): Bool = 
+        let grid = Vector#{
+         //  01234567890123456789   
+            ".F----7F7F7F7F-7....",
+            ".|F--7||||||||FJ....",
+            ".||.FJ||||||||L7....",
+            "FJL7L7LJLJ||LJ.L-7..",
+            "L--J.L7...LJS7F-7L7.",
+            "....F-J..F7FJ|L7L7L7",
+            "....L7.F7||L7|.L7L7|",
+            ".....|FJLJ|FJ|F7|.LJ",
+            "....FJL-7.||.||||...",
+            "....L---J.LJ.LJLJ..."
+        };
+        assertEq(8, () -> run(grid, countTilesWithinGrid))
 }
