@@ -48,11 +48,6 @@ mod Utils {
             case Comparison.GreaterThan => Comparison.LessThan
         }
 
-    pub def setStringBuilderLength(newLength: Int32, sb: StringBuilder[r]): Unit =
-        import java.lang.StringBuilder.setLength(Int32): Unit \ {} as setLength;
-        let StringBuilder.StringBuilder(msb) = sb;
-        setLength(msb, newLength)
-
     pub def readInputLines(filename: String): List[String] \ {IO, Throw} =
         Files.readLines("inputs/${filename}.txt") 
             |> resultOrThrow
