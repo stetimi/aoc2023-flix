@@ -2,6 +2,11 @@ pub enum Grid[a] {
     case Grid({points = Vector[a], width = Int32})
 }
 
+instance ToString[Grid[a]] with ToString[a] {
+    pub def toString(grid: Grid[a]): String =
+        Grid.rows(grid) |> Vector.map(Vector.join("")) |> Vector.join("\n")
+}
+
 mod Grid {
     pub type alias Pos = (Int32, Int32)
 
@@ -61,33 +66,78 @@ mod Grid {
         };
         loop((0, 0))
 
-    pub def count(pred: Pos -> Bool \ e, grid: Grid[_]): Int32 \ e = region rc {
-        let rcount = ref 0 @ rc;
-        def f(pos) = if (pred(pos)) {
-            rcount := deref rcount + 1;
-            ()
-        } else {
-            ()
-        };
-        forEach(f, grid);
-        deref rcount
-    }
+    pub def filterPositions(f: a -> Bool \ e, grid: Grid[a]): Vector[Pos] \ e = 
+        let Grid({points, width}) = grid;
+        points |> Vector.findIndices(f) |> Vector.map(toPosW(width))
 
     pub def toPos(grid: Grid[_], n: Int32): Pos =
-        let width = width(grid);
+        toPosW(width(grid), n)
+
+    pub def toPosW(width: Int32, n: Int32): Pos =
         let y = n / width;
         let x = Int32.remainder(n, width);
         (x, y)
 
+    pub def transpose(grid: Grid[a]): Grid[a] = 
+        let Grid({points, width}) = grid;
+        let totalPoints = Vector.length(points);
+        let height = totalPoints / width;
+        def index(i) = {
+            let (x, y) = toPos(grid, i);
+            x * height + y
+        };
+        let transposed = region rc {
+            let transposedArr = Array.empty(rc, totalPoints);
+            Vector.forEachWithIndex((i, x) -> Array.put(x, index(i), transposedArr), points);
+            Array.toVector(transposedArr)
+        };
+        Grid({points=transposed, width=height})
+
+    pub def fromRows(rows: Vector[Vector[a]]): Grid[a] = {
+        let width = Vector.get(0, rows) |> Vector.length;
+        Grid({points=Vector.flatten(rows), width=width})
+    }
+
+    pub def rows(grid: Grid[a]): Vector[Vector[a]] =
+        let Grid({points, width}) = grid;
+        def loop(ps) = {
+            let (first, rest) = Vector.splitAt(width, ps);
+            first :: (if (Vector.length(rest) <= width) List#{rest} else loop(rest))
+        };
+        loop(points) |> List.toVector
+
     @Test 
-    def findInGridIsNoneIfNotThere(): Bool = {
+    def findInGridIsNoneIfNotThere(): Bool = 
         let g = Grid({points = Vector#{1, 2, 3, 4, 5, 6}, width = 3});
         findInGrid(g, 7) == None
+
+    @Test 
+    def findInGridIsValueIfThere(): Bool = 
+        let g = Grid({points = Vector#{1, 2, 3, 4, 5, 6}, width = 3});
+        findInGrid(g, 4) == Some((0, 1))
+
+    def sample3x2Grid(): Grid[Int32] = 
+        Grid({points = Vector#{1, 2, 3, 4, 5, 6}, width = 3})
+
+    @Test 
+    def transposedHeightIsOriginalWidth(): Bool = 
+        let g = sample3x2Grid() |> transpose;
+        Assert.eq(2, width(g))
+    
+    @Test 
+    def transposedPointsAreSwappedCorrectly(): Bool = 
+        let Grid({points, width=_}) = sample3x2Grid() |> transpose;
+        Assert.eq(Vector#{1, 4, 2, 5, 3, 6}, points)
+
+    @Test 
+    pub def rowsWorks(): Bool = {
+        sample3x2Grid() 
+            |> rows
+            |> Assert.eq(Vector#{Vector#{1,2,3}, Vector#{4,5,6}})
     }
 
     @Test 
-    def findInGridIsValueIfThere(): Bool = {
-        let g = Grid({points = Vector#{1, 2, 3, 4, 5, 6}, width = 3});
-        findInGrid(g, 4) == Some((0, 1))
-    }
+    def stringRep(): Bool =
+        let s = ToString.toString(sample3x2Grid());
+        Assert.eq("123\n456", s)
 }
