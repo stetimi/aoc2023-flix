@@ -96,6 +96,9 @@ mod Utils {
     pub def listSum(unit: a, xs: List[a]): a with Add[a] =
         List.foldRight((x, y) -> x + y, unit, xs)
 
+    pub def vectorSum(unit: a, xs: Vector[a]): a with Add[a] =
+        Vector.foldRight((x, y) -> x + y, unit, xs)
+
     pub def comparisonOnOrdered(x: a, y: a): Comparison with Order[a] =
         if (x < y) {
             Comparison.LessThan
@@ -107,6 +110,17 @@ mod Utils {
 
     pub def comparing(mkKey: a -> k, first: a, second: a): Comparison with Order[k] =
         comparisonOnOrdered(mkKey(first), mkKey(second))
+
+    pub def stringForEach(f: Char -> Unit \ e, s: String): Unit \ e =
+        let l = String.length(s);
+        def loop(i) =
+            if (i >= l) {
+                ()
+            } else {
+                f(String.charAt(i, s));
+                loop(i + 1)
+            };
+        loop(0)
 
     @Test   
     pub def testListSplit(): Bool = 

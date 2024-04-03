@@ -1,91 +1,97 @@
 mod Day12 {
-    use Utils.{assertEq, readInputLines, parseInt32OrThrow, Throw}
+    use Utils.{assertEq, readInputLines, parseInt32OrThrow, stringForEach, listSum, vectorSum, getOrThrow, Throw}
 
-    type alias ParsedLine = {springs = Vector[Char], criteria = Vector[Int32]}
+    type alias ParsedLine = {springs = String, criteria = Vector[Int32]}
 
-    pub def part1(): Int32 \ {IO, Throw} = 
-        run(readInputLines("Day12") |> List.map(toRecord), countConditionRecords)
+    pub def part1(): Int64 \ {IO, Throw} = 
+        run(readInputLines("Day12") |> List.map(parseLine), countConditionRecords)
 
-    pub def run(lines: List[ParsedLine], part: ParsedLine -> Int32 \ e): Int32 \ e =
-        List.sumWith(part, lines)
+    pub def part2(): Int64 \ {IO, Throw} = 
+        run(readInputLines("Day12") |> List.map(parseLine) |> List.map(expandParsedLine), countConditionRecords)
 
-    def toRecord(line: String): ParsedLine \ Throw =
+    pub def run(lines: List[ParsedLine], part: ParsedLine -> Int64 \ e): Int64 \ e =
+        lines |> List.map(part) |> listSum(0i64)
+
+    def parseLine(line: String): ParsedLine \ Throw =
         let split = String.splitOn(substr=" ", line) |> List.toVector;
-        let springs = Vector.get(0, split) |> String.toVector;
+        let springs = Vector.get(0, split);
         let criteriaString = Vector.get(1, split);
         let criteria = String.splitOn(substr=",", criteriaString)
             |> List.map(parseInt32OrThrow)
             |> List.toVector;
         {springs=springs, criteria=criteria}
         
-    def countConditionRecords(line: ParsedLine): Int32 = 
-        generateRecords(line.springs, 0)
-            |> Vector.map(matchesCriteria(line.criteria))
-            |> Vector.count(x -> x)
-
-    def generateRecords(record: Vector[Char], index: Int32): Vector[Vector[Char]] =
-        if (index >= Vector.length(record)) {
-            Vector#{record}
-        } else {
-            if (Vector.get(index, record) == '?') {
-                let undamaged = Vector.update(index, '.', record);
-                let damaged = Vector.update(index, '#', record);
-                generateRecords(undamaged, index + 1) ++ generateRecords(damaged, index + 1)
+    def countConditionRecords(line: ParsedLine): Int64 = region rc {
+        let memo = MutMap.empty(rc);
+        def loop(springs, criteria) = {
+            if (Vector.isEmpty(criteria)) {
+                if (not String.contains(substr="#", springs)) 1i64 else 0i64
             } else {
-                generateRecords(record, index + 1)
-            }
-        }
-
-    def matchesCriteria(criteria: Vector[Int32], record: Vector[Char]): Bool = region rc {
-        let counts = MutList.empty(rc);
-        let rcount = ref 0 @ rc;
-        record |> Vector.forEach(ch -> {
-            let count = deref rcount;
-            match ch {
-                case '#' => rcount := count + 1
-                case '.' => {
-                    if (count != 0) {
-                        MutList.push!(count, counts);
-                        rcount := 0
-                    } else {
-                        ()
+                def memoize(r) = {
+                    MutMap.put!((springs, criteria), r, memo);
+                    r
+                };
+                match MutMap.get((springs, criteria), memo) {
+                    case Some(x) => x
+                    case None => {
+                        let minRemaining = vectorSum(0i32, criteria) + Vector.length(criteria) - 1;
+                        let springsLen = String.length(springs);
+                        if (springsLen < minRemaining) {
+                            0i64
+                        } else if (String.charAt(0, springs) == '.') {
+                            loop(String.drop(1, springs), criteria)
+                        } else {
+                            let currentCriterion = Vector.get(0, criteria);
+                            let allSpringsValid = String.slice(start=0, end=currentCriterion, springs) |> String.forAll(ch -> ch != '.');
+                            def lastCharValid() = springsLen == currentCriterion or String.charAt(currentCriterion, springs) != '#';
+                            let validCount = if (allSpringsValid and lastCharValid()) {
+                                let maxIndex = Int32.min(springsLen, currentCriterion + 1);
+                                loop(String.drop(maxIndex, springs), Vector.drop(1, criteria))
+                            } else {
+                                0i64
+                            };
+                            let others = if (String.charAt(0, springs) != '#') {
+                                loop(String.drop(1, springs), criteria)
+                            } else {
+                                0i64
+                            };
+                            (validCount + others) |> memoize
+                        }
                     }
                 }
-                case _ => unreachable!()
             }
-        });
-        if (deref rcount != 0) {
-            MutList.push!(deref rcount, counts)
-        } else ();
-        let countsVector = MutList.toVector(counts);
-        criteria == countsVector
+        };
+        loop(line.springs, line.criteria)
     }
 
-    @Test 
-    def testPart1(): Bool \ IO =
-        assertEq(21, () -> run(readInputLines("Day12Test") |> List.map(toRecord), countConditionRecords))
+    def expandParsedLine(line: ParsedLine): ParsedLine = 
+        def expandSprings(s) = "${s}?${s}?${s}?${s}?${s}";
+        def expandCriteria(s) = s ++ s ++ s ++ s ++ s;
+        {springs=expandSprings(line.springs), criteria=expandCriteria(line.criteria)}
+
 
     @Test 
-    pub def testGenerateRecords(): Bool =
-        let s = "???.###" |> String.toVector;
-        let combos = generateRecords(s, 0) |> Vector.map(Vector.join(""));
-        Assert.eq(Vector#{"....###", "..#.###", ".#..###", ".##.###", "#...###", "#.#.###", "##..###", "###.###"}, combos)
-
+    pub def testPart1(): Bool \ IO =
+        assertEq(21i64, () -> run(readInputLines("Day12Test") |> List.map(parseLine), countConditionRecords))
+    
     @Test 
-    pub def matchesCriteriaWhenMatchesAndEndsOnHash(): Bool =
-        let record = "##..###.#" |> String.toVector;
-        let criteria = Vector#{2, 3, 1};
-        matchesCriteria(criteria, record)
+    pub def testPart2(): Bool \ IO =
+        assertEq(525152i64, () -> run(readInputLines("Day12Test") |> List.map(parseLine) |> List.map(expandParsedLine), countConditionRecords))
 
-    @Test 
-    pub def matchesCriteriaWhenMatchesAndDoesNotEndOnHash(): Bool =
-        let record = "##..###.." |> String.toVector;
-        let criteria = Vector#{2, 3};
-        matchesCriteria(criteria, record)
+    @Test
+    def countConditionRecords1(): Bool =
+        let line = {springs=".??..??...?##.", criteria=Vector#{1,1,3}};
+        Assert.eq(4i64, countConditionRecords(line))
 
-    @Test 
-    pub def matchesCriteriaWhenNoMatch(): Bool =
-        let record = "##..###.#" |> String.toVector;
-        let criteria = Vector#{2, 3, 2};
-        not matchesCriteria(criteria, record)    
+    @Test
+    def countConditionRecords2(): Bool =
+        let line = {springs="?###????????", 
+                    criteria=Vector#{3,2,1}};
+        Assert.eq(10i64, countConditionRecords(line))
+
+    @Test
+    def countConditionRecords3(): Bool =
+        let line = {springs="????.######..#####.?????.######..#####.?????.######..#####.?????.######..#####.?????.######..#####.", 
+                    criteria=Vector#{1,6,5,1,6,5,1,6,5,1,6,5,1,6,5}};
+        Assert.eq(2500i64, countConditionRecords(line))
 }
