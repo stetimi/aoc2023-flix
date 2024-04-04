@@ -5,18 +5,13 @@ mod Day10 {
     enum Direction with Eq, Order, ToString {case N, E, S, W}
 
     pub def part1(): Int32 \ {IO, Throw} = 
-        run(readInputLines("Day10") |> List.toVector, countStepsToFarthestPoint)
+        run(readInputLines("Day10"), countStepsToFarthestPoint)
     
     pub def part2(): Int32 \ {IO, Throw} = 
-        run(readInputLines("Day10") |> List.toVector, countTilesWithinGrid)
+        run(readInputLines("Day10"), countTilesWithinGrid)
 
-    pub def run(lines: Vector[String], part: Grid[Char] -> Int32 \ e): Int32 \ e =
-        let points = lines
-            |> Vector.map(String.toVector)
-            |> Vector.flatten;
-        let width = Vector.get(0, lines) |> String.length;
-        let grid = Grid.Grid({points = points, width = width});
-        part(grid)
+    pub def run(lines: List[String], part: Grid[Char] -> Int32 \ e): Int32 \ e =
+        lines |> Grid.toGrid |> part
 
     def countStepsToFarthestPoint(grid: Grid[Char]): Int32 \ Throw = 
         let count = grid |> findStepsToFarthestPoint |> List.length;
@@ -102,7 +97,7 @@ mod Day10 {
 
     @Test 
     pub def part1Test(): Bool = 
-        let simple = Vector#{
+        let simple = List#{
             "-L|F7",
             "7S-7|",
             "L|7||",
@@ -113,7 +108,7 @@ mod Day10 {
 
     @Test
     pub def part2Simple(): Bool =
-        let grid = Vector#{
+        let grid = List#{
         //   01234567890
             "...........", // 0
             ".S-------7.", // 1
@@ -129,7 +124,7 @@ mod Day10 {
 
     @Test
     pub def part2LargerExample(): Bool = 
-        let grid = Vector#{
+        let grid = List#{
          //  01234567890123456789   
             ".F----7F7F7F7F-7....",
             ".|F--7||||||||FJ....",

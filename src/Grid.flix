@@ -9,6 +9,14 @@ instance ToString[Grid[a]] with ToString[a] {
 
 mod Grid {
     pub type alias Pos = (Int32, Int32)
+    
+    pub def toGrid(lines: List[String]): Grid[Char] =
+        let linesVec = List.toVector(lines);
+        let points = linesVec
+            |> Vector.map(String.toVector)
+            |> Vector.flatten;
+        let width = Vector.get(0, linesVec) |> String.length;
+        Grid.Grid({points = points, width = width})
 
     pub def findInGrid(grid: Grid[a], value: a): Option[Pos] with Eq[a] = {
         let Grid(g) = grid;
