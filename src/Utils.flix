@@ -124,7 +124,7 @@ mod Utils {
 
     pub def forEachInRange(start: Int32, end: Int32, f: Int32 -> Unit \ e): Unit \ e = 
         def loop(i) =
-            if (i == end) {
+            if (i >= end) {
                 ()
             } else {
                 f(i);
