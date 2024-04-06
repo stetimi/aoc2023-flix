@@ -122,6 +122,16 @@ mod Utils {
             };
         loop(0)
 
+    pub def forEachInRange(start: Int32, end: Int32, f: Int32 -> Unit \ e): Unit \ e = 
+        def loop(i) =
+            if (i == end) {
+                ()
+            } else {
+                f(i);
+                loop(i + 1)
+            };
+        loop(start)
+
     @Test   
     pub def testListSplit(): Bool = 
         let xs = List#{1, 2, 3, 4, 5};
