@@ -9,6 +9,19 @@ instance ToString[Grid[a]] with ToString[a] {
 
 mod Grid {
     pub type alias Pos = (Int32, Int32)
+
+    pub enum Direction with Eq, Order, ToString {case N, E, S, W} 
+
+    pub def move(pos: Pos, direction: Direction, grid: Grid[_]): Option[Pos] = {
+        let (x, y) = pos;
+        let nextPos = match direction {
+            case Direction.N => (x, y - 1)
+            case Direction.E => (x + 1, y)
+            case Direction.S => (x, y + 1)
+            case Direction.W => (x - 1, y)
+        };
+        if (Grid.within(grid, nextPos)) Some(nextPos) else None
+    }
     
     pub def toGrid(lines: List[String]): Grid[Char] =
         let linesVec = List.toVector(lines);
