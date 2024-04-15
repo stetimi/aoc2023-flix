@@ -7,10 +7,33 @@ instance ToString[Grid[a]] with ToString[a] {
         Grid.rows(grid) |> Vector.map(Vector.join("")) |> Vector.join("\n")
 }
 
+instance Functor[Grid] {
+    pub def map(f: a -> b \ ef, grid: Grid[a]): Grid[b] \ ef = 
+        let Grid.Grid({points, width}) = grid;
+        Grid.Grid({points=Vector.map(f, points), width=width})
+}
+
 mod Grid {
     pub type alias Pos = (Int32, Int32)
 
     pub enum Direction with Eq, Order, ToString {case N, E, S, W} 
+
+    pub def turnLeft(d: Direction): Direction = match d {
+        case Direction.N => Direction.W
+        case Direction.E => Direction.N
+        case Direction.S => Direction.E
+        case Direction.W => Direction.S
+    }
+
+    pub def turnRight(d: Direction): Direction = match d {
+        case Direction.N => Direction.E
+        case Direction.E => Direction.S
+        case Direction.S => Direction.W
+        case Direction.W => Direction.N
+    }
+
+    pub def bottomRightPos(g: Grid[_]): Pos =
+        (width(g) - 1, height(g) - 1)
 
     pub def move(pos: Pos, direction: Direction, grid: Grid[_]): Option[Pos] = {
         let (x, y) = pos;
