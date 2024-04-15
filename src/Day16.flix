@@ -29,12 +29,34 @@ mod Day16 {
     pub def part1(): Int32 \ {Throw, IO} = 
         run("Day16", countEnergized)
 
+    pub def part2(): Int32 \ {Throw, IO} = 
+        run("Day16", maximizeEnergized)
+
     def run(file: String, part: Grid[Char] -> Int32): Int32 \ {IO, Throw} =
         readInputLines(file) |> Grid.toGrid |> part
 
-    def countEnergized(grid: Grid[Char]): Int32 = region rc {
+    def countEnergized(grid: Grid[Char]): Int32 = {
+        let starterBeam = Beam.Beam({pos=(0,0), direction=Direction.E});
+        fireBeams(grid, starterBeam)
+    }
+
+    def maximizeEnergized(grid: Grid[Char]): Int32 = {
+        let height = Grid.height(grid);
+        let width = Grid.width(grid);
+        let northBeams = List.range(0, width) |> List.map(x -> Beam.Beam({pos=(x,height-1), direction=Direction.N}));
+        let eastBeams = List.range(0, height) |> List.map(y -> Beam.Beam({pos=(0,y), direction=Direction.E}));
+        let southBeams = List.range(0, width) |> List.map(x -> Beam.Beam({pos=(x,0), direction=Direction.S}));
+        let westBeams = List.range(0, height) |> List.map(y -> Beam.Beam({pos=(width-1,y), direction=Direction.W}));
+        List#{northBeams, eastBeams, southBeams, westBeams}
+            |> List.flatten
+            |> List.map(fireBeams(grid))
+            |> List.maximum
+            |> Option.getWithDefault(0)
+    }
+
+    def fireBeams(grid: Grid[Char], starterBeam: Beam): Int32 = region rc {
         let energized = MutSet.empty(rc);
-         def moveBeams(beams) = {
+        def moveBeams(beams) = {
             def moveBeam(beam) = {
                 let Beam.Beam({pos, direction}) = beam;
                 let ch = Grid.at(grid, pos);
@@ -74,7 +96,6 @@ mod Day16 {
                 loop(newBeams)
             }
         };
-        let starterBeam = Beam.Beam({pos=(0,0), direction=Direction.E});
         MutSet.add!(starterBeam, energized);
         loop(List#{starterBeam});
         energized 
@@ -86,4 +107,8 @@ mod Day16 {
     @Test 
     pub def testPart1(): Bool \ IO =
         assertEq(46, () -> run("Day16Test", countEnergized))
+
+    @Test 
+    pub def testPart2(): Bool \ IO =
+        assertEq(51, () -> run("Day16Test", maximizeEnergized))
 }
