@@ -157,6 +157,15 @@ def popOnSize1(): Bool = region rc {
 }
 
 @Test
+def popOnSize2(): Bool = region rc {
+    let pq = PriorityQueue.empty(rc);
+    PriorityQueue.insert!(rc, 15, pq);
+    PriorityQueue.insert!(rc, 5, pq);
+    Assert.eq(Some(5), PriorityQueue.pop!(pq)) and
+    Assert.eq(Some(15), PriorityQueue.pop!(pq))
+}
+
+@Test
 def smallListTest(): Bool = region rc {
     let pq = PriorityQueue.empty(rc);
     def insert!(x) = PriorityQueue.insert!(rc, x, pq);
