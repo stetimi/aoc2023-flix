@@ -185,14 +185,14 @@ mod Day7 {
         and assertEq(negateComparison(expected), () -> compareByCardRank(toHand(h2), toHand(h1)))
 
     @Test 
-    pub def testPart1(): Bool \ IO =
+    pub def testPart1(): Bool =
         assertEq(6440i64, 
             () -> readInputLines("Day7Test") 
                 |> List.map(parseLine)
                 |> rank(noJokers, scoreNoJokers))
 
      @Test 
-    pub def testPart2(): Bool \ IO =
+    pub def testPart2(): Bool =
         assertEq(5905i64, 
             () -> readInputLines("Day7Test") 
                 |> List.map(parseLine)

@@ -105,10 +105,10 @@ mod Day16 {
     }
 
     @Test 
-    pub def testPart1(): Bool \ IO =
+    pub def testPart1(): Bool =
         assertEq(46, () -> run("Day16Test", countEnergized))
 
     @Test 
-    pub def testPart2(): Bool \ IO =
+    pub def testPart2(): Bool =
         assertEq(51, () -> run("Day16Test", maximizeEnergized))
 }

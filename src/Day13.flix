@@ -57,11 +57,11 @@ mod Day13 {
         total == diffs
 
     @Test 
-    pub def testPart1(): Bool \ IO =
+    pub def testPart1(): Bool =
         assertEq(405, () -> run(readInputLines("Day13Test"), countReflections(0)))
 
     @Test 
-    pub def testPart2(): Bool \ IO =
+    pub def testPart2(): Bool =
         assertEq(400, () -> run(readInputLines("Day13Test"), countReflections(1)))
 
     @Test 

@@ -21,7 +21,7 @@ mod Utils {
             case None => do Throw.throw()
         }
 
-    pub def assertEq(expected: a, f: Unit -> a \ e + Throw): Bool \ e with ToString[a], Eq[a] =
+    pub def assertEq(expected: a, f: Unit -> a \ {e, Throw}): Bool with ToString[a], Eq[a] =
         try {
             Assert.eq(expected, f())
         } with Throw {

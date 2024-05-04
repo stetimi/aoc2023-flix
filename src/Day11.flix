@@ -71,10 +71,10 @@ mod Day11 {
         }
 
     @Test 
-    pub def part1Test(): Bool \ IO =
+    pub def part1Test(): Bool =
         assertEq(374i64, () -> run("Day11Test" |> readInputLines |> List.toVector, sumShortestPaths(2)))
 
     @Test 
-    pub def part2Test(): Bool \ IO =
+    pub def part2Test(): Bool =
         assertEq(1030i64, () -> run("Day11Test" |> readInputLines |> List.toVector, sumShortestPaths(10)))
 }

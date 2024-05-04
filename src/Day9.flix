@@ -60,11 +60,11 @@ mod Day9 {
 
 
     @Test 
-    pub def testPart1(): Bool \ IO =
+    pub def testPart1(): Bool =
         assertEq(114, () -> run("Day9Test", sumAllExtrapolated))
 
     @Test 
-    pub def testPart2(): Bool \ IO =
+    pub def testPart2(): Bool =
         assertEq(2, () -> run("Day9Test", sumAllBackwardsExtrapolated))
 
     @Test 

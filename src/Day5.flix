@@ -46,7 +46,7 @@ mod Day5 {
         
 
     @Test 
-    def testPart1(): Bool \ IO =
+    def testPart1(): Bool =
         assertEq(35i64, () -> readInputLines("Day5Test") |> lowestLocationNumber)
 
     def sampleResourceMappings(): ResourceMappings =

@@ -6,7 +6,7 @@ pub trait RandomAccess[m] {
 
 instance RandomAccess[Vector[a]] {
     type Elm = a
-    type Aef = { Pure }
+    type Aef = {}
     pub def nth(n: Int32, xs: Vector[a]): Option[a] = Vector.nth(n, xs)
 }
 

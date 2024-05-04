@@ -96,11 +96,11 @@ mod Day14 {
             |> Vector.map(Vector.reverse)
 
     @Test 
-    pub def testPart1(): Bool \ IO = 
+    pub def testPart1(): Bool = 
         assertEq(136, () -> run(readInputLines("Day14Test"), tilt >> transpose >> calculateLoad))
 
     @Test 
-    pub def testPart2(): Bool \ IO = 
+    pub def testPart2(): Bool = 
         assertEq(64, () -> run(readInputLines("Day14Test"), cycle))
 
     @Test 

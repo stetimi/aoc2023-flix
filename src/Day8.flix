@@ -108,6 +108,6 @@ mod Day8 {
                 |> parseInput
                 |> part1)
 
-    pub def testPart2(): Bool \ IO =
+    pub def testPart2(): Bool =
         assertEq(6i64, () -> run("Day8Test", part2))
 }

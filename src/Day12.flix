@@ -71,11 +71,11 @@ mod Day12 {
 
 
     @Test 
-    pub def testPart1(): Bool \ IO =
+    pub def testPart1(): Bool =
         assertEq(21i64, () -> run(readInputLines("Day12Test") |> List.map(parseLine), countConditionRecords))
     
     @Test 
-    pub def testPart2(): Bool \ IO =
+    pub def testPart2(): Bool =
         assertEq(525152i64, () -> run(readInputLines("Day12Test") |> List.map(parseLine) |> List.map(expandParsedLine), countConditionRecords))
 
     @Test
